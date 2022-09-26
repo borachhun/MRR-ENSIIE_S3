@@ -27,7 +27,7 @@ dim(tab)
 We then try visualizing the data in order to see if there is an apparent linear relationship between the year and the number of users.
 
 ```{r}
-plot(tab, xlab="Year", ylab="Monthly active users")
+plot(tab, xlab="Year", ylab="Monthly Active Users (MAU)")
 ```
 
 Based on the plotted graph above, we can see that the relationship is fairly linear. Therefore, we can use a linear model to represent the relationship.
@@ -39,7 +39,9 @@ summary(modreg)
 
 According to the summary of the model, the estimated intercept equals $-4.330 \times 10^5$ and the estimated coefficient of the year variable equals $2.157 \times 10^2$. The model can be written in the form:
 
-$$\hat{MAU} = (-4.330 \times 10^5) + (2.157 \times 10^2) year$$
+$$\hat{y} = (-4.330 \times 10^5) + (2.157 \times 10^2) x (???+ \hat{\epsilon})$$
+
+where $x$ is the year variable and $\hat{y}$ is the prediction of the MAU.
 
 As for the $R^2$, we can see that $R^2 = 0.9979 \approx 1$. It is a great result since the value corresponds to the cosinus of the angle between the vector of predictions and the vector of the target values, and the closer to 0 the angle gets, the better the model becomes.
 
@@ -52,7 +54,7 @@ grid()
 abline(a=0, b=1, col="red")
 ```
 
-In the graph $(MAU, \hat{MAU})$ above, we can see that the plotted points are fairly close to the bisector???
+In the graph $(y, \hat{y})$ above, we can see that the plotted points are fairly close to the bisector, which indicates that the model is acceptable.
 
 ```{r}
 epsilon <- Y - Y_predict
