@@ -5,11 +5,11 @@ date: "19 September 2022"
 output: pdf_document
 ---
 
+# IV. Application: GAFAM or BATX dataset
+
 ```{r, echo=FALSE}
 rm(list=ls()); graphics.off()
 ```
-
-# IV. Application: GAFAM or BATX dataset
 
 The data set below shows the number of monthly active users (MAU) on Facebook from 2008 to 2021 in millions (*source: https://www.statista.com/statistics/264810/number-of-monthly-active-facebook-users-worldwide/*). The numbers were taken from Q4 of each year except for the year 2008, whose data is only available in Q3.
 
@@ -39,9 +39,9 @@ summary(modreg)
 
 According to the summary of the model, the estimated intercept equals $-4.330 \times 10^5$ and the estimated coefficient of the year variable equals $2.157 \times 10^2$. The model can be written in the form:
 
-$$\hat{y} = (-4.330 \times 10^5) + (2.157 \times 10^2) x (???+ \hat{\epsilon})$$
+$$\hat{y} = (-4.330 \times 10^5) + (2.157 \times 10^2) x + \hat{\epsilon}$$
 
-where $x$ is the year variable and $\hat{y}$ is the prediction of the MAU.
+where $x$ is the year variable, $\hat{y}$ is the prediction of the MAU and $\hat{\epsilon}$ is the residual.
 
 As for the $R^2$, we can see that $R^2 = 0.9979 \approx 1$. It is a great result since the value corresponds to the cosinus of the angle between the vector of predictions and the vector of the target values, and the closer to 0 the angle gets, the better the model becomes.
 
@@ -56,6 +56,8 @@ abline(a=0, b=1, col="red")
 
 In the graph $(y, \hat{y})$ above, we can see that the plotted points are fairly close to the bisector, which indicates that the model is acceptable.
 
+The graph below is a scatter plot of the residual for every pair of $(y, hat{y})$.
+
 ```{r}
 epsilon <- Y - Y_predict
 plot(epsilon)
@@ -63,25 +65,54 @@ grid()
 abline(a=0, b=0, col="red")
 ```
 
+According to the residual graph or the summary of the linear model above, the absolute value of both the minimum and maximum residual approximately equal to $60$, which are for the values $y = 1591$ and $y = 2797$.
+
 # V. Medical data
+
+```{r, echo=FALSE}
+rm(list=ls()); graphics.off()
+```
 
 ```{r}
 tab <- read.table("diabetes.txt", header=TRUE, sep="\t")
+```
 
+The dimension of the data set:
+
+```{r}
+dim(tab)
+```
+
+The data set consists of $p=10$ variables and $n=442$ observations.
+
+We now try creating a linear model with the data set.
+
+```{r}
 modreg = lm(Y~., data=tab)
 summary(modreg)
 ```
+
+With the `summary()` function, we can see that the variable "SEX", "BMI", "BPI" and "S5" are the most significant variables of the model.
+
+R-squared???
+
+Using the linear model obtained above, we predict the values of $y$ and compare them with the target values in the data set.
 
 ```{r}
 Y <- tab$Y
 Y_predict <- predict(modreg, tab)
 plot(Y, Y_predict)
 grid()
-abline(a=0, b=1)
+abline(a=0, b=1, col="red")
 ```
+
+Based on the $(y, \hat{y})$ graph above, we can see that the plotted points are scattered around the bisector, with some points pretty far away from the bisector, rather that appearing on the line. This shows that the difference between predicted values and the target values are quite significant and thus the linear model is not good enough.
+
+The scatter plot below shows the residual for every pair of $(y, \hat{y})$.
 
 ```{r}
 epsilon <- Y - Y_predict
 plot(epsilon)
 grid()
+abline(a=0, b=0, col="red")
 ```
