@@ -27,10 +27,12 @@ dim(tab)
 We then try visualizing the data in order to see if there is an apparent linear relationship between the year and the number of users.
 
 ```{r}
-plot(tab, xlab="Year", ylab="Monthly active users (MAU)", main="Facebook MAU from 2008 to 2021 (in millions)", pch=19, col=rgb(0.27,0.4,0.68))
+plot(tab, xlab="Year", ylab="Monthly active users (MAU)",
+     main="Facebook MAU from 2008 to 2021 (in millions)",
+     pch=19, col=rgb(0.27,0.4,0.68))
 ```
 
-Based on the plotted graph above, we can see that the relationship is fairly linear. Therefore, we can use a linear model to represent the relationship.
+Based on the graph above, we can see that the relationship is fairly linear. Therefore, we can use a linear model to represent the relationship.
 
 ```{r}
 modreg = lm(mau ~ year, data=tab)
@@ -43,7 +45,7 @@ $$\hat{y} = (-4.330 \times 10^5) + (2.157 \times 10^2) x + \hat{\epsilon}$$
 
 where $x$ is the year variable, $\hat{y}$ is the prediction of the MAU and $\hat{\epsilon}$ is the residual.
 
-As for the $R^2$, we can see that $R^2 = 0.9979 \approx 1$. It is a great result since the value corresponds to the cosinus of the angle between the vector of predictions and the vector of the observed values, and the closer to 0 the angle gets, the better the model becomes.
+As for the $R^2$, we can see that $R^2 = 0.9979 \approx 1$. It is a great result since the value corresponds to the cosinus of the angle between the vector of the predicted value and the vector of the observed value, and the closer to 0 the angle gets, the better the model becomes.
 
 ```{r}
 Y <- tab$mau
@@ -56,16 +58,15 @@ abline(a=0, b=1, col="red")
 
 In the graph $(y, \hat{y})$ above, we can see that the plotted points are fairly close to the bisector, which indicates that the model is acceptable.
 
-The graph below is a scatter plot of the residuals for every pair of $(y, hat{y})$.
+The graph below is a scatter plot of the residuals for every pair of $(y, \hat{y})$.
 
 ```{r}
 epsilon <- Y - Y_predict
+
 plot(epsilon, main="Residuals", pch=19, col="red")
 grid()
 abline(a=0, b=0, col="black")
 ```
-
-According to the residual graph or the summary of the linear model above, the absolute value of both the minimum and maximum residual approximately equal to $60$, which are for the values $y = 1591$ and $y = 2797$.
 
 # V. Medical data
 
@@ -91,7 +92,7 @@ names(tab)
 
 The data set consists of $p=10$ co-variables and one target variable ("Y"), and $n=442$ observations.
 
-We now try creating a linear model with the data set.
+We now try creating a linear model using the data set.
 
 ```{r}
 modreg = lm(Y~., data=tab)
@@ -100,11 +101,12 @@ summary(modreg)
 
 With the `summary()` function, we can see that the variable "SEX", "BMI", "BP" and "S5" are the most significant variables of the model. We can also see that $R^2 = 0.5177$ which is quite far from 1, indicating that the current linear regression is not doing well.
 
-Using the linear model obtained, we further predict the values of $y$ and compare them with the observed values in the data set.
+Using the obtained linear model, we further predict the values of $y$ and compare them with the observed values in the data set.
 
 ```{r}
 Y <- tab$Y
 Y_predict <- predict(modreg, tab)
+
 plot(Y, Y_predict, col="blue", pch=20, main="Observed and predicted values")
 grid()
 abline(a=0, b=1, col="red")
@@ -116,6 +118,7 @@ The scatter plot below shows the residual for every pair of $(y, \hat{y})$.
 
 ```{r}
 epsilon <- Y - Y_predict
+
 plot(epsilon, col="red", pch=20, main="Residuals")
 grid()
 abline(a=0, b=0, col="black")
