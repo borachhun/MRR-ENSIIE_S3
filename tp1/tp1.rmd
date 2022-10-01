@@ -5,7 +5,7 @@ date: "19 September 2022"
 output: pdf_document
 ---
 
-# IV. Application: GAFAM or BATX dataset
+# IV. Application: GAFAM or BATX data set
 
 ```{r, echo=FALSE}
 rm(list=ls()); graphics.off()
