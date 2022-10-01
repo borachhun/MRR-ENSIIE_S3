@@ -98,7 +98,7 @@ modreg = lm(Y~., data=tab)
 summary(modreg)
 ```
 
-With the `summary()` function, we can see that the variable "SEX", "BMI", "BPI" and "S5" are the most significant variables of the model. We can also see that $R^2 = 0.5177$ which is quite far from 1, indicating that the current linear regression is not doing well enough.
+With the `summary()` function, we can see that the variable "SEX", "BMI", "BP" and "S5" are the most significant variables of the model. We can also see that $R^2 = 0.5177$ which is quite far from 1, indicating that the current linear regression is not doing well.
 
 Using the linear model obtained, we further predict the values of $y$ and compare them with the observed values in the data set.
 
@@ -110,7 +110,7 @@ grid()
 abline(a=0, b=1, col="red")
 ```
 
-Based on the $(y, \hat{y})$ graph above, we can see that the plotted points are scattered around the bisector, with some points pretty far away from the bisector, rather that appearing on the line. This shows that the difference between predicted values and the observed values are quite significant and thus the linear model is not good enough.
+Based on the $(y, \hat{y})$ graph above, we can see that the plotted points are scattered around the bisector, with some points pretty far away from the bisector, rather that appearing on the line. This shows that the differences between the predicted values and the observed values are quite significant and thus the linear model is not good enough.
 
 The scatter plot below shows the residual for every pair of $(y, \hat{y})$.
 
