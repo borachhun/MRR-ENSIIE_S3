@@ -11,7 +11,7 @@ output: pdf_document
 rm(list=ls()); graphics.off()
 ```
 
-The data set below shows the number of monthly active users (MAU) on Facebook from 2008 to 2021 in millions (*source: https://www.statista.com/statistics/264810/number-of-monthly-active-facebook-users-worldwide/*). The numbers were taken from Q4 of each year except for the year 2008, whose data is only available in Q3.
+The data set^[Source: https://www.statista.com/statistics/264810/number-of-monthly-active-facebook-users-worldwide/] below shows the number of monthly active users (MAU) on Facebook from 2008 to 2021 in millions. The numbers were taken from Q4 of each year except for the year 2008, whose data is only available in Q3.
 
 ```{r}
 tab <- read.table("fb_mau.txt", header=TRUE, sep=",")
