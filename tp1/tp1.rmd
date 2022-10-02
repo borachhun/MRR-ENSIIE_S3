@@ -45,7 +45,7 @@ $$\hat{y} = (-4.330 \times 10^5) + (2.157 \times 10^2) x + \hat{\epsilon}$$
 
 where $x$ is the year variable, $\hat{y}$ is the prediction of the MAU and $\hat{\epsilon}$ is the residual.
 
-As for the $R^2$, we can see that $R^2 = 0.9979 \approx 1$. It is a great result since the value corresponds to the cosinus of the angle between the vector of the predicted value and the vector of the observed value, and the closer to 0 the angle gets, the better the model becomes.
+As for the $R^2$, we can see that $R^2 = 0.9979 \approx 1$. It is a great result since the value corresponds to the Cosinus of the angle between the vector of the predicted value and the vector of the observed value, and the closer to 0 the angle gets, the better the model becomes.
 
 ```{r}
 Y <- tab$mau
