@@ -25,7 +25,8 @@ summary(reg)
 Y <- tab$Y
 Y_predict <- predict(reg, tab)
 
-plot(Y, Y_predict, col="blue", pch=20, main="Observed and predicted values")
+plot(Y, Y_predict, col="blue", pch=20, 
+     main="Observed and predicted values")
 grid()
 abline(a=0, b=1, col="red")
 ```
@@ -42,7 +43,8 @@ summary(regbackward)
 ```{r}
 Y_backward <- predict(regbackward, tab)
 
-plot(Y, Y_backward, col="blue", pch=20, main="Observed and predicted values of backward regression")
+plot(Y, Y_backward, col="blue", pch=20, 
+     main="Observed and predicted values of backward regression")
 grid()
 abline(a=0, b=1, col="red")
 ```
@@ -57,7 +59,8 @@ summary(regforward)
 ```{r}
 Y_forward <- predict(regforward, tab)
 
-plot(Y, Y_forward, col="blue", pch=20, main="Observed and predicted values of forward regression")
+plot(Y, Y_forward, col="blue", pch=20, 
+     main="Observed and predicted values of forward regression")
 grid()
 abline(a=0, b=1, col="red")
 ```
@@ -72,7 +75,8 @@ summary(regboth)
 ```{r}
 Y_both <- predict(regboth, tab)
 
-plot(Y, Y_both, col="blue", pch=20, main="Observed and predicted values of stepwise regression")
+plot(Y, Y_both, col="blue", pch=20, 
+     main="Observed and predicted values of stepwise regression")
 grid()
 abline(a=0, b=1, col="red")
 ```
