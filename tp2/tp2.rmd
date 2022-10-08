@@ -1,0 +1,88 @@
+---
+title: "Practical session - Modèles de régression régularisée"
+author: "Piseth KHENG, Borachhun YOU"
+date: "03 October 2022"
+output: pdf_document
+---
+
+# IV. Medical data
+
+```{r, echo=FALSE}
+rm(list=ls()); graphics.off()
+```
+
+```{r}
+tab <- read.table("diabetes.txt", header=TRUE, sep="\t")
+head(tab)
+```
+
+```{r}
+reg = lm(Y~., data=tab)
+summary(reg)
+```
+
+```{r}
+Y <- tab$Y
+Y_predict <- predict(reg, tab)
+
+plot(Y, Y_predict, col="blue", pch=20, main="Observed and predicted values")
+grid()
+abline(a=0, b=1, col="red")
+```
+
+## 1. Model selection
+
+### A. Backward regression
+
+```{r}
+regbackward = step(reg, direction="backward")
+summary(regbackward)
+```
+
+```{r}
+Y_backward <- predict(regbackward, tab)
+
+plot(Y, Y_backward, col="blue", pch=20, main="Observed and predicted values of backward regression")
+grid()
+abline(a=0, b=1, col="red")
+```
+
+### B. Forward regression
+
+```{r}
+regforward = step(lm(Y~1, data=tab), list(upper=reg), direction="forward")
+summary(regforward)
+```
+
+```{r}
+Y_forward <- predict(regforward, tab)
+
+plot(Y, Y_forward, col="blue", pch=20, main="Observed and predicted values of forward regression")
+grid()
+abline(a=0, b=1, col="red")
+```
+
+### C. Stepwise regression
+
+```{r}
+regboth = step(reg, direction="both")
+summary(regboth)
+```
+
+```{r}
+Y_both <- predict(regboth, tab)
+
+plot(Y, Y_both, col="blue", pch=20, main="Observed and predicted values of stepwise regression")
+grid()
+abline(a=0, b=1, col="red")
+```
+
+## 2. Ridge
+
+```{r}
+scaled_tab <- scale(tab)
+```
+
+## 3. Lasso
+
+
