@@ -84,7 +84,14 @@ abline(a=0, b=1, col="red")
 ## 2. Ridge
 
 ```{r}
-scaled_tab <- scale(tab)
+library(MASS)
+resridge = lm.ridge(Y~., data=tab, lambda=seq(0,10,0.01))
+plot(resridge$lambda, resridge$GCV, pch=20)
+select(resridge)
+```
+
+```{r}
+resridge = lm.ridge(Y~., data=tab, lambda=3.24)
 ```
 
 ## 3. Lasso
