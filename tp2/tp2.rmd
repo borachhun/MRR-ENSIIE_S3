@@ -83,12 +83,53 @@ abline(a=0, b=1, col="red")
 
 ## 2. Ridge
 
+Ridge regression with $\lambda$ having a value from 0 to 20 with an increment of 0.01:
+
 ```{r}
 library(MASS)
-resridge = lm.ridge(Y~., data=tab, lambda=seq(0,10,0.01))
-plot(resridge$lambda, resridge$GCV, pch=20)
-select(resridge)
+resridge = lm.ridge(Y~., data=tab, lambda=seq(0,20,0.01))
 ```
+
+Evolution of the value of the coefficients with respect to $\lambda$:
+
+```{r}
+plot(resridge)
+```
+
+Finding the best $\lambda$ value:
+
+```{r}
+plot(resridge$lambda, resridge$GCV, pch=20)
+best_lambda <- as.numeric(names(which.min(resridge$GCV)))
+print(paste("Best lambda:", best_lambda))
+```
+
+Ridge with the best $\lambda$ value ($\lambda = 3.24$):
+
+```{r}
+best_resridge = lm.ridge(Y~., data=tab, lambda=best_lambda)
+```
+
+```{r}
+# Values of the coefficients in the "rescaling framework"
+best_resridge$coef
+```
+
+```{r}
+# Values of the coefficients in the initial framework
+coef(best_resridge)
+```
+
+```{r}
+```
+
+```{r}
+```
+
+
+
+
+
 
 ```{r}
 resridge = lm.ridge(Y~., data=tab, lambda=3.24)
