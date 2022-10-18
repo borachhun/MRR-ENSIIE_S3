@@ -126,13 +126,7 @@ coef(best_resridge)
 ```{r}
 ```
 
-
-
-
-
-
 ```{r}
-resridge = lm.ridge(Y~., data=tab, lambda=3.24)
 ```
 
 ## 3. Lasso
