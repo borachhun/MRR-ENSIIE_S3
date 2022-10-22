@@ -12,22 +12,20 @@ rm(list=ls()); graphics.off()
 ```
 
 Firstly, we read data from file into data frame.
-
 ```{r}
 tab <- read.table("diabetes.txt", header=TRUE, sep="\t")
 X <- as.matrix(tab[, 1:10])
 Y <- tab[, 11]
 head(tab)
 ```
-We then try fitting a linear model with all the variables.
 
+We then try fitting a linear model with all the variables.
 ```{r}
 reg <- lm(Y~., data=tab)
 summary(reg)
 ```
 
 Now, we predict the values of $y$ using the obtained model above and compare them with the observed values in the data set.
-
 ```{r}
 Y <- tab$Y
 Y_predict <- predict(reg, tab)
@@ -37,7 +35,6 @@ plot(Y, Y_predict, col="blue", pch=20,
 grid()
 abline(a=0, b=1, col="red")
 ```
-
 We can see in the $(y,\hat{y})$ graph above that the plotted points are scattered around the bisector, showing that the linear model is not good enough.
 
 We now then try to find a better predictive model using the variable selection method (backward, forward and stepwise), Ridge regression and Lasso regression.
@@ -95,52 +92,43 @@ abline(a=0, b=1, col="red")
 ## 2. Ridge regression
 
 With Ridge regression, the estimate of the coefficients $\hat{\beta}$ of the model is given by:
-
 $$\hat{\beta}_{RR} = (X^T X + \lambda I_p)^{-1} X^T Y$$
-
 We then need to find the value of the penalization parameter $\lambda$.
 
 We first compute the Ridge regression with $\lambda$ having values from 0 to 20 with an increment of 0.01.
-
 ```{r}
 library(MASS)
 resridge <- lm.ridge(Y~., data=tab, lambda=seq(0,20,0.01))
 ```
 
 The graph below shows the evolution of the value of the coefficients with respect to $\lambda$ from 0 to 20.
-
 ```{r}
 plot(resridge)
 ```
 
 We now find the best $\lambda$ by using the GCV (Generalized Cross Validation) values. The graph below is a plot of GCV against $\lambda$.
-
 ```{r}
 plot(resridge$lambda, resridge$GCV, pch=20)
 best_ridge_lambda <- as.numeric(names(which.min(resridge$GCV)))
 print(paste("Best lambda:", best_ridge_lambda))
 ```
 
-We then refit the model with the best $\lambda$ value.
-
+We then compute the regression with the best $\lambda$ value.
 ```{r}
 best_resridge <- lm.ridge(Y~., data=tab, lambda=best_ridge_lambda)
 ```
 
 The values of the coefficients in the "rescaling" framework:
-
 ```{r}
 best_resridge$coef
 ```
 
 The values of the coefficients in the initial framework:
-
 ```{r}
 best_coefridge <- coef(best_resridge)
 ```
 
 The mean squared error: ?????
-
 ```{r}
 Yridge <- X%*%as.vector(best_coefridge)
 mean((Y - Yridge)^2)
@@ -157,7 +145,6 @@ mean((Y - Yridge)^2)
 Here, we use `glmnet()` function of the Glmnet library to compute Lasso regression.
 
 Similar to Ridge regression, we have to find the value of the penalization parameter $\lambda$. We therefore perform k-fold cross-validation in order to find the best $\lambda$ value.
-
 ```{r}
 library(glmnet)
 
@@ -168,14 +155,12 @@ best_lasso_lambda <- cv_lasso$lambda.min
 print(paste("Best lambda:", best_lasso_lambda))
 ```
 
-We then refit the model with the best $\lambda$ value.
-
+We then compute the regression with the best $\lambda$ value.
 ```{r}
 best_lasso <- glmnet(X, Y, alpha=1, lambda=best_lasso_lambda)
 ```
 
 The values of the coefficients:
-
 ```{r}
 coef(best_lasso)
 ```
