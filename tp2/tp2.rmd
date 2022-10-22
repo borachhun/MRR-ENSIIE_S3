@@ -113,7 +113,7 @@ The graph below shows the evolution of the value of the coefficients with respec
 plot(resridge)
 ```
 
-We now find the best $\lambda$ by using the GCV (Generalized Cross Validation) value. The graph below is a plot of GCV against $\lambda$.
+We now find the best $\lambda$ by using the GCV (Generalized Cross Validation) values. The graph below is a plot of GCV against $\lambda$.
 
 ```{r}
 plot(resridge$lambda, resridge$GCV, pch=20)
@@ -142,7 +142,7 @@ best_coefridge <- coef(best_resridge)
 The mean squared error: ?????
 
 ```{r}
-Yridge <- X\%*\%as.vector(best_coefridge)
+Yridge <- X%*%as.vector(best_coefridge)
 mean((Y - Yridge)^2)
 ```
 
@@ -152,34 +152,30 @@ mean((Y - Yridge)^2)
 ```{r}
 ```
 
-## 3. Lasso regression (using glmnet)
+## 3. Lasso regression
 
-Using glmnet library:
+Here, we use `glmnet()` function of the Glmnet library to compute Lasso regression.
+
+Similar to Ridge regression, we have to find the value of the penalization parameter $\lambda$. We therefore perform k-fold cross-validation in order to find the best $\lambda$ value.
 
 ```{r}
 library(glmnet)
 
-reslasso <- glmnet(X, Y, alpha=1)
-
-plot(reslasso)
-plot(reslasso$lambda)
-
-reslasso$lambda
-```
-
-K-fold cross-validation to find the best $\lambda$ value:
-
-```{r}
-cv_lasso <- cv.glmnet(X, Y, alpha=1)
+cv_lasso <- cv.glmnet(X, Y, alpha=1)    # 10 folds default
 plot(cv_lasso)
 
 best_lasso_lambda <- cv_lasso$lambda.min
 print(paste("Best lambda:", best_lasso_lambda))
 ```
 
-Lasso with the best lambda:
+We then refit the model with the best $\lambda$ value.
 
 ```{r}
 best_lasso <- glmnet(X, Y, alpha=1, lambda=best_lasso_lambda)
+```
+
+The values of the coefficients:
+
+```{r}
 coef(best_lasso)
 ```
