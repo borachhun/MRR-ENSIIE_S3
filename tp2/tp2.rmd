@@ -37,17 +37,24 @@ abline(a=0, b=1, col="red")
 ```
 We can see in the $(y,\hat{y})$ graph above that the plotted points are scattered around the bisector, showing that the linear model is not good enough.
 
-We now then try to find a better predictive model using the variable selection method (backward, forward and stepwise), Ridge regression and Lasso regression.
+We now then try to find a better predictive model using the variable selection method, Ridge regression and Lasso regression.
 
-## 1. Variable selection: forward regression
+## 1. Variable selection
 
 (Goal: min AIC)???
 
+Here, we are using the **forward selection** method.
 ```{r}
 regforward <- step(lm(Y~1, data=tab), list(upper=reg), direction="forward")
+```
+With forward selection, we start with a model with no variable. Then at each step, we add a variable to the model that gives the best improvement. In order to determine which variable to add to the model, the algorithm calculates the AIC of the model for each case of the variables, and chooses the one with the lowest AIC value.
+
+```{r}
 summary(regforward)
 ```
+(TO BE CHECKED) We can see that in the obtained model, the variable AGE, S3, S4 and S6 are removed.
 
+??????
 ```{r}
 Y_forward <- predict(regforward, tab)
 
