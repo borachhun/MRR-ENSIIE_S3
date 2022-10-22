@@ -15,6 +15,8 @@ Firstly, we read data from file into data frame.
 
 ```{r}
 tab <- read.table("diabetes.txt", header=TRUE, sep="\t")
+X <- as.matrix(tab[, 1:10])
+Y <- tab[, 11]
 head(tab)
 ```
 We then try fitting a linear model with all the variables.
@@ -134,10 +136,14 @@ best_resridge$coef
 The values of the coefficients in the initial framework:
 
 ```{r}
-coef(best_resridge)
+best_coefridge <- coef(best_resridge)
 ```
 
+The mean squared error: ?????
+
 ```{r}
+Yridge <- X\%*\%as.vector(best_coefridge)
+mean((Y - Yridge)^2)
 ```
 
 ```{r}
@@ -147,13 +153,6 @@ coef(best_resridge)
 ```
 
 ## 3. Lasso regression (using glmnet)
-
-Data:
-
-```{r}
-X <- data.matrix(tab[, 1:10])
-Y <- tab[, 11]
-```
 
 Using glmnet library:
 
