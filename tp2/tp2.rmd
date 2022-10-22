@@ -11,15 +11,20 @@ output: pdf_document
 rm(list=ls()); graphics.off()
 ```
 
+Firstly, we read data from file into data frame.
+
 ```{r}
 tab <- read.table("diabetes.txt", header=TRUE, sep="\t")
 head(tab)
 ```
+We then try fitting a linear model with all the variables.
 
 ```{r}
 reg <- lm(Y~., data=tab)
 summary(reg)
 ```
+
+Now, we predict the values of $y$ using the obtained model above and compare them with the observed values in the data set.
 
 ```{r}
 Y <- tab$Y
@@ -31,7 +36,11 @@ grid()
 abline(a=0, b=1, col="red")
 ```
 
-## 1. Model selection
+We can see in the $(y,\hat{y})$ graph above that the plotted points are scattered around the bisector, showing that the linear model is not good enough.
+
+We now then try to find a better predictive model using the variable selection method (backward, forward and stepwise), Ridge regression and Lasso regression.
+
+## 1. Variable selection
 
 ### A. Backward regression
 
@@ -81,14 +90,22 @@ grid()
 abline(a=0, b=1, col="red")
 ```
 
-## 2. Ridge
+## 2. Ridge regression
 
-Ridge regression with $\lambda$ having a value from 0 to 20 with an increment of 0.01:
+With Ridge regression, the estimate of the coefficients $\hat{\beta}$ of the model is given by:
+
+$$\hat{\beta}_{RR} = (X^T X + \lambda I_p)^{-1} X^T Y$$
+
+We then need to find the value of the penalization parameter $\lambda$.
+
+We first compute the Ridge regression with $\lambda$ having values from 0 to 20 with an increment of 0.01.
 
 ```{r}
 library(MASS)
 resridge <- lm.ridge(Y~., data=tab, lambda=seq(0,20,0.01))
 ```
+
+## ARRIVE HERE
 
 Evolution of the value of the coefficients with respect to $\lambda$:
 
@@ -129,7 +146,7 @@ coef(best_resridge)
 ```{r}
 ```
 
-## 3. Lasso (using glmnet)
+## 3. Lasso regression (using glmnet)
 
 Data:
 
