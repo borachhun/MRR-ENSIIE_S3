@@ -11,7 +11,7 @@ output: pdf_document
 rm(list=ls()); graphics.off()
 ```
 
-Firstly, we read data from file into data frame.
+Firstly, we load the data into a data frame.
 ```{r}
 tab <- read.table("diabetes.txt", header=TRUE, sep="\t")
 X <- as.matrix(tab[, 1:10])
@@ -63,6 +63,8 @@ plot(Y, Y_forward, col="blue", pch=20,
 grid()
 abline(a=0, b=1, col="red")
 ```
+
+As for the **backward selection**, it follows the same principle, but in opposite direction (starting with a full model with all variables then removing a variable at each step).
 
 ## 2. Ridge regression
 
