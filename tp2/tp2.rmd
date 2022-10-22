@@ -105,15 +105,13 @@ library(MASS)
 resridge <- lm.ridge(Y~., data=tab, lambda=seq(0,20,0.01))
 ```
 
-## ARRIVE HERE
-
-Evolution of the value of the coefficients with respect to $\lambda$:
+The graph below shows the evolution of the value of the coefficients with respect to $\lambda$ from 0 to 20.
 
 ```{r}
 plot(resridge)
 ```
 
-Finding the best $\lambda$ value:
+We now find the best $\lambda$ by using the GCV (Generalized Cross Validation) value. The graph below is a plot of GCV against $\lambda$.
 
 ```{r}
 plot(resridge$lambda, resridge$GCV, pch=20)
@@ -121,19 +119,21 @@ best_ridge_lambda <- as.numeric(names(which.min(resridge$GCV)))
 print(paste("Best lambda:", best_ridge_lambda))
 ```
 
-Ridge with the best $\lambda$ value ($\lambda = 3.24$):
+We then refit the model with the best $\lambda$ value.
 
 ```{r}
 best_resridge <- lm.ridge(Y~., data=tab, lambda=best_ridge_lambda)
 ```
 
+The values of the coefficients in the "rescaling" framework:
+
 ```{r}
-# Values of the coefficients in the "rescaling framework"
 best_resridge$coef
 ```
 
+The values of the coefficients in the initial framework:
+
 ```{r}
-# Values of the coefficients in the initial framework
 coef(best_resridge)
 ```
 
