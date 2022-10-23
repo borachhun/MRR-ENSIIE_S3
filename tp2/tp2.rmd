@@ -97,8 +97,8 @@ best_coefridge <- coef(best_resridge)
 
 The mean squared error: ?????
 ```{r}
-Yridge <- as.matrix(X)%*%as.vector(best_coefridge)
-mean((Y - Yridge)^2)
+Y_ridge <- as.matrix(X)%*%as.vector(best_coefridge)
+mean((Y - Y_ridge)^2)
 ```
 
 ```{r}
@@ -115,8 +115,7 @@ Similar to Ridge regression, we have to find the value of the penalization param
 ```{r}
 library(glmnet)
 
-# ??????????????????? X matrix ???????????????????????
-cv_lasso <- cv.glmnet(X, Y, alpha=1)    # 10 folds default
+cv_lasso <- cv.glmnet(as.matrix(X), Y, alpha=1)    # 10 folds default
 plot(cv_lasso)
 
 best_lasso_lambda <- cv_lasso$lambda.min
@@ -125,9 +124,7 @@ print(paste("Best lambda:", best_lasso_lambda))
 
 We then compute the regression with the best value of $\lambda$.
 ```{r}
-
-# ??????????????????? X matrix ???????????????????????
-best_reslasso <- glmnet(X, Y, alpha=1, lambda=best_lasso_lambda)
+best_reslasso <- glmnet(as.matrix(X), Y, alpha=1, lambda=best_lasso_lambda)
 ```
 
 The values of the coefficients:
