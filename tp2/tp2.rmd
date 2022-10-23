@@ -50,9 +50,9 @@ With forward selection, we start with a model with no variable. Then at each ste
 ```{r}
 summary(regforward)
 ```
-We can see that in the obtained model, the variable AGE, S3, S4 and S6 are removed.
+In the final model, we can see that the variable AGE, S3, S4 and S6 are removed.
 
-???????????? Compare R squared or RSS
+In terms of the R-squared and the adjusted R-squared, there are very small differences between this model and the multiple linear regression model above, meaning that this model is still not good enough.
 
 As for the **backward selection**, it follows the same principle, but in opposite direction (starting with a full model with all variables then removing a variable at each step).
 
