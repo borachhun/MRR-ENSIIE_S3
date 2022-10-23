@@ -93,15 +93,16 @@ best_resridge$coef
 The values of the coefficients in the initial framework:
 ```{r}
 best_coefridge <- coef(best_resridge)
+best_coefridge
 ```
 
 We now calculate the value of R-squared of the best Ridge regression model. The value of R-squared is given by:
 $$R^2 = 1 - \frac{RSS}{TSS}$$
-where RSS is the residual sum squared and TSS is the total sum squared.
+where RSS is the residual sum of squares and TSS is the total sum of squares.
 ```{r}
 Y_ridge <- cbind(matrix(1, nrow=dim(X)[1], ncol=1), as.matrix(X)) %*% as.vector(best_coefridge)
 TSS <- sum((Y-mean(Y))^2)
-RSS <- sum((Y-Y_predict)^2)
+RSS <- sum((Y-Y_ridge)^2)
 R_squared_ridge <- 1-(RSS/TSS)
 print(paste("R-squared of Ridge regression model:", R_squared_ridge))
 ```
