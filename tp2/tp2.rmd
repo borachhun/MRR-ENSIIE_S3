@@ -95,17 +95,17 @@ The values of the coefficients in the initial framework:
 best_coefridge <- coef(best_resridge)
 ```
 
-The mean squared error: ?????
+We now calculate the value of R-squared of the best Ridge regression model. The value of R-squared is given by:
+$$R^2 = 1 - \frac{RSS}{TSS}$$
+where RSS is the residual sum squared and TSS is the total sum squared.
 ```{r}
-Y_ridge <- as.matrix(X)%*%as.vector(best_coefridge)
-mean((Y - Y_ridge)^2)
+Y_ridge <- cbind(matrix(1, nrow=dim(X)[1], ncol=1), as.matrix(X)) %*% as.vector(best_coefridge)
+TSS <- sum((Y-mean(Y))^2)
+RSS <- sum((Y-Y_predict)^2)
+R_squared_ridge <- 1-(RSS/TSS)
+print(paste("R-squared of Ridge regression model:", R_squared_ridge))
 ```
-
-```{r}
-```
-
-```{r}
-```
+We can see that the value of R-squared of the Ridge regression model is almost the same as the value of R-squared of the multiple linear regression model, indicating that the resulting model is not improving.
 
 ## 3. Lasso regression
 
@@ -131,3 +131,9 @@ The values of the coefficients:
 ```{r}
 coef(best_reslasso)
 ```
+
+The value of R-squared:
+```{r}
+best_reslasso$dev.ratio
+```
+Once again, we see that the value of R-squared of the Lasso regression model is approximately the same as the value of R-squared of the multiple linear regression model, and thus the obtained model is not any better than the one of the multiple linear regression.
