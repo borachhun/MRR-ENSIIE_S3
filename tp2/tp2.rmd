@@ -11,15 +11,15 @@ output: pdf_document
 rm(list=ls()); graphics.off()
 ```
 
-Firstly, we load the data into a data frame.
+Firstly, we load the data into data frames.
 ```{r}
 tab <- read.table("diabetes.txt", header=TRUE, sep="\t")
-X <- as.matrix(tab[, 1:10])
+X <- tab[, 1:10]
 Y <- tab[, 11]
 head(tab)
 ```
 
-We then try fitting a linear model with all the variables.
+We now try computing for a multiple linear regression model with all the variables.
 ```{r}
 reg <- lm(Y~., data=tab)
 summary(reg)
@@ -27,7 +27,6 @@ summary(reg)
 
 Now, we predict the values of $y$ using the obtained model above and compare them with the observed values in the data set.
 ```{r}
-Y <- tab$Y
 Y_predict <- predict(reg, tab)
 
 plot(Y, Y_predict, col="blue", pch=20, 
@@ -35,13 +34,12 @@ plot(Y, Y_predict, col="blue", pch=20,
 grid()
 abline(a=0, b=1, col="red")
 ```
+
 We can see in the $(y,\hat{y})$ graph above that the plotted points are scattered around the bisector, showing that the linear model is not good enough.
 
 We now then try to find a better predictive model using the variable selection method, Ridge regression and Lasso regression.
 
 ## 1. Variable selection
-
-(Goal: min AIC)???
 
 Here, we are using the **forward selection** method.
 ```{r}
@@ -52,17 +50,9 @@ With forward selection, we start with a model with no variable. Then at each ste
 ```{r}
 summary(regforward)
 ```
-(TO BE CHECKED) We can see that in the obtained model, the variable AGE, S3, S4 and S6 are removed.
+We can see that in the obtained model, the variable AGE, S3, S4 and S6 are removed.
 
-??????
-```{r}
-Y_forward <- predict(regforward, tab)
-
-plot(Y, Y_forward, col="blue", pch=20, 
-     main="Observed and predicted values of forward regression")
-grid()
-abline(a=0, b=1, col="red")
-```
+???????????? Compare R squared or RSS
 
 As for the **backward selection**, it follows the same principle, but in opposite direction (starting with a full model with all variables then removing a variable at each step).
 
@@ -90,7 +80,7 @@ best_ridge_lambda <- as.numeric(names(which.min(resridge$GCV)))
 print(paste("Best lambda:", best_ridge_lambda))
 ```
 
-We then compute the regression with the best $\lambda$ value.
+We then compute the regression with the best value of $\lambda$.
 ```{r}
 best_resridge <- lm.ridge(Y~., data=tab, lambda=best_ridge_lambda)
 ```
@@ -107,7 +97,7 @@ best_coefridge <- coef(best_resridge)
 
 The mean squared error: ?????
 ```{r}
-Yridge <- X%*%as.vector(best_coefridge)
+Yridge <- as.matrix(X)%*%as.vector(best_coefridge)
 mean((Y - Yridge)^2)
 ```
 
@@ -119,12 +109,13 @@ mean((Y - Yridge)^2)
 
 ## 3. Lasso regression
 
-Here, we use `glmnet()` function of the Glmnet library to compute Lasso regression.
+Here, we use `glmnet()` function of the `glmnet` library to compute Lasso regression.
 
-Similar to Ridge regression, we have to find the value of the penalization parameter $\lambda$. We therefore perform k-fold cross-validation in order to find the best $\lambda$ value.
+Similar to Ridge regression, we have to find the value of the penalization parameter $\lambda$. We therefore perform k-fold cross-validation in order to find the best value of $\lambda$.
 ```{r}
 library(glmnet)
 
+# ??????????????????? X matrix ???????????????????????
 cv_lasso <- cv.glmnet(X, Y, alpha=1)    # 10 folds default
 plot(cv_lasso)
 
@@ -132,12 +123,14 @@ best_lasso_lambda <- cv_lasso$lambda.min
 print(paste("Best lambda:", best_lasso_lambda))
 ```
 
-We then compute the regression with the best $\lambda$ value.
+We then compute the regression with the best value of $\lambda$.
 ```{r}
-best_lasso <- glmnet(X, Y, alpha=1, lambda=best_lasso_lambda)
+
+# ??????????????????? X matrix ???????????????????????
+best_reslasso <- glmnet(X, Y, alpha=1, lambda=best_lasso_lambda)
 ```
 
 The values of the coefficients:
 ```{r}
-coef(best_lasso)
+coef(best_reslasso)
 ```
