@@ -1,0 +1,162 @@
+---
+title: "Practical session - Modèles de régression régularisée"
+author: "Piseth KHENG, Borachhun YOU"
+date: "24 October 2022"
+output: pdf_document
+---
+
+# II. Application to diabetes medical data
+
+```{r, echo=FALSE}
+rm(list=ls()); graphics.off()
+```
+
+Firstly, we load the data into a data frame. We then convert the values of `Y` into binary values (`YBin`) using the median of `Y` as the threshold:
+* 0 if `Y` is smaller or equal to its median
+* 1 if `Y` is bigger than its median.
+```{r}
+tab <- read.table("diabetes.txt", header=TRUE, sep="\t")
+
+# Add YBin to data frame
+tab$YBin <- as.numeric(tab$Y > median(tab$Y))
+
+# Drop Y from data frame
+tab <- tab[, -11]
+
+head(tab)
+```
+
+Now, we randomly split the data into 2 sets: training data set (80% of the data) to calibrate the models, and testing data set (the remaining 20% of the data) to evaluate the models after the calibration.
+```{r}
+test_index <- sample(1:442, size=round(442/5))
+
+train_data <- tab[-test_index, ]
+test_data <- tab[test_index, ]
+```
+
+Given the observations and predictions, the function below is used to compute the confusion matrix of a model along with value of the accuracy, the precision, the recall and the specificity.
+```{r}
+performance <- function(Y, Y_predict) {
+  confusion_matrix <- table(Prediction=Y_predict, Observation=Y)
+  
+  cat("Confusion matrix:\n\n")
+  print(confusion_matrix)
+  
+  confusion_matrix["0","0"] -> TN
+  confusion_matrix["0","1"] -> FN
+  confusion_matrix["1","0"] -> FP
+  confusion_matrix["1","1"] -> TP
+  
+  accuracy_ <- (TP+TN)/(TP+TN+FP+FN)
+  precision_ <- TP/(TP+FP)
+  recall_ <- TP/(TP+FN)
+  specificity_ <- TN/(TN+FP)
+  
+  cat("\nAccuracy:", accuracy_, "\n")
+  cat("Precision:", precision_, "\n")
+  cat("Recall:", recall_, "\n")
+  cat("Specificity:", specificity_, "\n")
+  
+  return(list(accuracy=accuracy_, precision=precision_, 
+              recall=recall_, specificity=specificity_))
+}
+```
+
+## 1. Logistic regression
+
+### With a training data set and a testing data set
+
+Here, we are using the 80%-20% splitted data above to train and test the logistic model.
+```{r}
+res_logit <- glm(YBin~., family=binomial, data=train_data)
+```
+
+After the model is trained, we then use it for predictions. 0.5 is taken as the threshold for the binary predictions.
+```{r}
+YBin_logit <- round(predict.glm(res_logit, newdata=test_data[, -11], type="response"))
+```
+
+The result below is the performance of the model.
+```{r}
+perf_logit <- performance(test_data$YBin, YBin_logit)
+```
+
+### K-fold cross-validation
+
+Now, we want to use the whole data for both training and testing the model by performing k-fold cross-validation. We choose $k=5$ and thus we divide the data set of 442 observations into 5 subsets: 4 data sets of 88 observations and 1 data set of 90 observations. (Performance of each fold and overall compares with above?)
+```{r}
+fold_index <- split(
+  1:442,
+  f = sample(rep(1:5, times=c(88, 88, 88, 88, 90)))
+)
+for (i in 1:5) {
+  cat("========= FOLD", i, "=========\n\n")
+  
+  test_fold_index <- fold_index[[i]]
+  train_fold <- tab[-test_fold_index, ]
+  test_fold <- tab[test_fold_index, ]
+  
+  res_fold <- glm(YBin~., family=binomial, data=train_fold)
+  
+  YBin_fold <- round(predict.glm(res_fold, newdata=test_fold[, -11], type="response"))
+  
+  #TP <- sum((tab_test$YBin == 1) + (YBin_predict_MAP == 1) == 2)
+  #TN <- sum((tab_test$YBin == 0) + (YBin_predict_MAP == 0) == 2)
+  #FP <- sum((tab_test$YBin == 0) + (YBin_predict_MAP == 1) == 2)
+  #FN <- sum((tab_test$YBin == 1) + (YBin_predict_MAP == 0) == 2)
+
+  perf_fold <- performance(test_fold$YBin, YBin_fold)
+  cat("\n")
+}
+```
+
+## 2. Logistic regression with variable selection
+
+Here, we are using the **forward selection** method. We start the process with no variable and we try adding a variable at each iteration.
+```{r}
+resall <- glm(YBin~., family=binomial, data=train_data)
+res0 <- glm(YBin~1, family=binomial, data=train_data)
+res_forward <- step(res0, list(upper=resall), direction="forward")
+summary(res_forward)
+```
+In the final model, we can see that the variable `AGE`, `S3`, `S4` and `S6` are removed.
+
+(Performance below)
+```{r}
+YBin_forward <- round(predict.glm(res_forward, newdata=test_data[, -11], type="response"))
+perf_forward <- performance(test_data$YBin, YBin_forward)
+```
+
+## 3. Logistic regression with $l_2$ penalization (Ridge regression)
+
+```{r}
+library(glmnet)
+
+cv_ridge <- cv.glmnet(as.matrix(tab[,-11]), tab$YBin, family="binomial", alpha=0)
+plot(cv_ridge)
+```
+
+```{r}
+best_ridge_lambda <- cv_ridge$lambda.min
+
+res_ridge <- glmnet(as.matrix(train_data[,-11]), train_data$YBin, family="binomial", alpha=0, lambda=best_ridge_lambda)
+
+YBin_ridge <- round(predict(res_ridge, as.matrix(test_data[, -11]), type="response"))
+
+perf_ridge <- performance(test_data$YBin, YBin_ridge)
+```
+
+## 4. Logistic regression with $l_1$ penalization (Lasso regression)
+
+## 5. Comparison of the model performances
+
+```{r}
+data.frame(
+  Model=c("Logit", "Forward", "Ridge", "Lasso"),
+  Accuracy=c(perf_logit$accuracy, perf_forward$accuracy, perf_ridge$accuracy, perf_lasso$accuracy),
+  Precision=c(perf_logit$precision, perf_forward$precision, perf_ridge$precision, perf_lasso$precision),
+  Recall=c(perf_logit$recall, perf_forward$recall, perf_ridge$recall, perf_lasso$recall),
+  Specificity=c(perf_logit$specificity, perf_forward$specificity, perf_ridge$specificity, perf_lasso$specificity)
+)
+```
+
