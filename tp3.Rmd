@@ -11,7 +11,7 @@ output: pdf_document
 rm(list=ls()); graphics.off()
 ```
 
-Firstly, we load the data into a data frame. We then convert the values of `Y` into binary values (`YBin`) using the median of `Y` as the threshold:
+Firstly, we load the data into a data frame. We then convert the values of `Y` into binary values (`YBin`) by using the median of `Y` as the threshold. The value of `YBin` equals:
 * 0 if `Y` is smaller or equal to its median
 * 1 if `Y` is bigger than its median.
 ```{r}
@@ -23,10 +23,11 @@ tab$YBin <- as.numeric(tab$Y > median(tab$Y))
 # Drop Y from data frame
 tab <- tab[, -11]
 
+dim(tab)
 head(tab)
 ```
 
-Now, we randomly split the data into 2 sets: training data set (80% of the data) to calibrate the models, and testing data set (the remaining 20% of the data) to evaluate the models after the calibration.
+Now, we randomly split the data into 2 sets: a training data set (80% of the data) to calibrate the models, and a testing data set (the remaining 20% of the data) to evaluate the models after the calibration.
 ```{r}
 test_index <- sample(1:442, size=round(442/5))
 
@@ -34,7 +35,7 @@ train_data <- tab[-test_index, ]
 test_data <- tab[test_index, ]
 ```
 
-Given the observations and predictions, the function below is used to compute the confusion matrix of a model along with value of the accuracy, the precision, the recall and the specificity.
+Given observations and predictions, the function below is used to compute the confusion matrix of a model along with the value of the accuracy, the precision, the recall and the specificity of the model.
 ```{r}
 performance <- function(Y, Y_predict) {
   confusion_matrix <- table(Prediction=Y_predict, Observation=Y)
@@ -66,9 +67,10 @@ performance <- function(Y, Y_predict) {
 
 ### With a training data set and a testing data set
 
-Here, we are using the 80%-20% splitted data above to train and test the logistic model.
+Here, we are using the 80%-20% split data above to train and test the logistic model.
 ```{r}
 res_logit <- glm(YBin~., family=binomial, data=train_data)
+summary(res_logit)
 ```
 
 After the model is trained, we then use it for predictions. 0.5 is taken as the threshold for the binary predictions.
