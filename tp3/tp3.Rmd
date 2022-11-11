@@ -142,20 +142,25 @@ perf_forward <- performance(test_data$YBin, YBin_forward)
 
 ## 3. Logistic regression with $l_2$ penalization (Ridge regression)
 
+With Ridge regression, we start by finding the best value of $\lambda$, by performing k-fold cross-validation ($k=10$ in this case) and find the value of $\lambda$ that minimizes the cross-validated error.
 ```{r}
 library(glmnet)
 
 cv_ridge <- cv.glmnet(as.matrix(tab[,-11]), tab$YBin, family="binomial", alpha=0)
 plot(cv_ridge)
+
+best_ridge_lambda <- cv_ridge$lambda.min
+cat("Best Ridge lambda:", best_ridge_lambda, "\n")
 ```
 
+After obtaining the value of $\lambda$, we then use it to compute the Ridge regression.
 ```{r}
-best_ridge_lambda <- cv_ridge$lambda.min
-
 res_ridge <- glmnet(as.matrix(train_data[,-11]), train_data$YBin, family="binomial", alpha=0, lambda=best_ridge_lambda)
-
+coef(res_ridge)
+```
+Once again, we use the trained model to predict new data (testing data set) then compare the predictions and the observations to calculate the performance of the model.
+```{r}
 YBin_ridge <- round(predict(res_ridge, as.matrix(test_data[, -11]), type="response"))
-
 perf_ridge <- performance(test_data$YBin, YBin_ridge)
 ```
 
