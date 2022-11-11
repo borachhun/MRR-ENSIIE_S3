@@ -166,6 +166,28 @@ perf_ridge <- performance(test_data$YBin, YBin_ridge)
 
 ## 4. Logistic regression with $l_1$ penalization (Lasso regression)
 
+Similar to Ridge regression, with Lasso regression, we begin by selecting the best value of $\lambda$, by performing k-fold cross-validation.
+```{r}
+library(glmnet)
+
+cv_lasso <- cv.glmnet(as.matrix(tab[,-11]), tab$YBin, family="binomial", alpha=1)
+plot(cv_lasso)
+
+best_lasso_lambda <- cv_lasso$lambda.min
+cat("Best Lasso lambda:", best_lasso_lambda, "\n")
+```
+
+We now compute the Lasso regression with the obtained value of $\lambda$.
+```{r}
+res_lasso <- glmnet(as.matrix(train_data[,-11]), train_data$YBin, family="binomial", alpha=1, lambda=best_lasso_lambda)
+coef(res_lasso)
+```
+Now, we use the trained model for predictions and compute the performance of the model.
+```{r}
+YBin_lasso <- round(predict(res_lasso, as.matrix(test_data[, -11]), type="response"))
+perf_lasso <- performance(test_data$YBin, YBin_lasso)
+```
+
 ## 5. Comparison of the model performances
 
 ```{r}
