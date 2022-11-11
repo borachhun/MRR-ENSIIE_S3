@@ -91,6 +91,12 @@ fold_index <- split(
   1:442,
   f = sample(rep(1:5, times=c(88, 88, 88, 88, 90)))
 )
+
+avg_accuracy <- 0
+avg_precision <- 0
+avg_recall <- 0
+avg_specificity <- 0
+
 for (i in 1:5) {
   cat("========= FOLD", i, "=========\n\n")
   
@@ -101,15 +107,20 @@ for (i in 1:5) {
   res_fold <- glm(YBin~., family=binomial, data=train_fold)
   
   YBin_fold <- round(predict.glm(res_fold, newdata=test_fold[, -11], type="response"))
-  
-  #TP <- sum((tab_test$YBin == 1) + (YBin_predict_MAP == 1) == 2)
-  #TN <- sum((tab_test$YBin == 0) + (YBin_predict_MAP == 0) == 2)
-  #FP <- sum((tab_test$YBin == 0) + (YBin_predict_MAP == 1) == 2)
-  #FN <- sum((tab_test$YBin == 1) + (YBin_predict_MAP == 0) == 2)
 
   perf_fold <- performance(test_fold$YBin, YBin_fold)
   cat("\n")
+
+  avg_accuracy <- avg_accuracy + perf_fold$accuracy
+  avg_precision <- avg_precision + perf_fold$precision
+  avg_recall <- avg_recall + perf_fold$recall
+  avg_specificity <- avg_specificity + perf_fold$specificity
 }
+
+cat("\nAverage accuracy:", avg_accuracy/5, "\n")
+cat("Average precision:", avg_precision/5, "\n")
+cat("Average recall:", avg_recall/5, "\n")
+cat("Average specificity:", avg_specificity/5, "\n")
 ```
 
 ## 2. Logistic regression with variable selection
