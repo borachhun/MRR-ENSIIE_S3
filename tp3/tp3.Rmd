@@ -111,10 +111,10 @@ for (i in 1:5) {
   perf_fold <- performance(test_fold$YBin, YBin_fold)
   cat("\n")
 
-  sum_accuracy <- avg_accuracy + perf_fold$accuracy
-  sum_precision <- avg_precision + perf_fold$precision
-  sum_recall <- avg_recall + perf_fold$recall
-  sum_specificity <- avg_specificity + perf_fold$specificity
+  sum_accuracy <- sum_accuracy + perf_fold$accuracy
+  sum_precision <- sum_precision + perf_fold$precision
+  sum_recall <- sum_recall + perf_fold$recall
+  sum_specificity <- sum_specificity + perf_fold$specificity
 }
 
 cat("\nAverage accuracy:", sum_accuracy/5, "\n")
@@ -124,18 +124,17 @@ cat("Average specificity:", sum_specificity/5, "\n")
 ```
 The results obtained above are values related to the performance of the model of each fold, as well as the average values of the 5 folds. (Describe average value compare with first method: increase or decrease)
 
-## 2. Logistic regression with variable selection
+## 2. Logistic regression with model selection
 
-Here, we are using the **forward selection** method. We start the process with no variable and we try adding a variable at each iteration.
+Here, we are using the **forward selection** method. We start the process with no variable and we try adding a variable at each iteration. Also, we use the 80% training data set to train the model.
 ```{r}
-resall <- glm(YBin~., family=binomial, data=train_data)
 res0 <- glm(YBin~1, family=binomial, data=train_data)
-res_forward <- step(res0, list(upper=resall), direction="forward")
+res_forward <- step(res0, list(upper=res_logit), direction="forward")
 summary(res_forward)
 ```
 In the final model, we can see that the variable `AGE`, `S3`, `S4` and `S6` are removed.
 
-(Performance below)
+We now use the trained model for predictions and we use the 20% testing data set as new data. We then compare the predictions and the observations in order to compute the performance of the model.
 ```{r}
 YBin_forward <- round(predict.glm(res_forward, newdata=test_data[, -11], type="response"))
 perf_forward <- performance(test_data$YBin, YBin_forward)
