@@ -1,5 +1,5 @@
 ---
-title: "Practical session - Modèles de régression régularisée"
+title: "Practical session 3 - Modèles de régression régularisée"
 author: "Piseth KHENG, Borachhun YOU"
 date: "24 October 2022"
 output: pdf_document
@@ -12,6 +12,7 @@ rm(list=ls()); graphics.off()
 ```
 
 Firstly, we load the data into a data frame. We then convert the values of `Y` into binary values (`YBin`) by using the median of `Y` as the threshold. The value of `YBin` equals:
+
 * 0 if `Y` is smaller or equal to its median
 * 1 if `Y` is bigger than its median.
 ```{r}
@@ -117,12 +118,12 @@ for (i in 1:5) {
   sum_specificity <- sum_specificity + perf_fold$specificity
 }
 
-cat("\nAverage accuracy:", sum_accuracy/5, "\n")
+cat("Average accuracy:", sum_accuracy/5, "\n")
 cat("Average precision:", sum_precision/5, "\n")
 cat("Average recall:", sum_recall/5, "\n")
 cat("Average specificity:", sum_specificity/5, "\n")
 ```
-The results obtained above are values related to the performance of the model of each fold, as well as the average values of the 5 folds. (Describe average value compare with first method: increase or decrease)
+The results obtained above are values related to the performance of the method for each fold, as well as the average values of the 5 folds.
 
 ## 2. Logistic regression with model selection
 
@@ -132,7 +133,6 @@ res0 <- glm(YBin~1, family=binomial, data=train_data)
 res_forward <- step(res0, list(upper=res_logit), direction="forward")
 summary(res_forward)
 ```
-In the final model, we can see that the variable `AGE`, `S3`, `S4` and `S6` are removed.
 
 We now use the trained model for predictions and we use the 20% testing data set as new data. We then compare the predictions and the observations in order to compute the performance of the model.
 ```{r}
@@ -155,10 +155,12 @@ cat("Best Ridge lambda:", best_ridge_lambda, "\n")
 
 After obtaining the value of $\lambda$, we then use it to compute the Ridge regression.
 ```{r}
-res_ridge <- glmnet(as.matrix(train_data[,-11]), train_data$YBin, family="binomial", alpha=0, lambda=best_ridge_lambda)
+res_ridge <- glmnet(as.matrix(train_data[,-11]), train_data$YBin, family="binomial",
+                    alpha=0, lambda=best_ridge_lambda)
 coef(res_ridge)
 ```
-Once again, we use the trained model to predict new data (testing data set) then compare the predictions and the observations to calculate the performance of the model.
+
+Once again, we use the trained model to predict new data (testing data set), then compare the predictions and the observations to calculate the performance of the model.
 ```{r}
 YBin_ridge <- round(predict(res_ridge, as.matrix(test_data[, -11]), type="response"))
 perf_ridge <- performance(test_data$YBin, YBin_ridge)
@@ -166,7 +168,7 @@ perf_ridge <- performance(test_data$YBin, YBin_ridge)
 
 ## 4. Logistic regression with $l_1$ penalization (Lasso regression)
 
-Similar to Ridge regression, with Lasso regression, we begin by selecting the best value of $\lambda$, by performing k-fold cross-validation.
+Similar to Ridge regression, with Lasso regression, we begin by selecting the best value of $\lambda$ by performing k-fold cross-validation.
 ```{r}
 library(glmnet)
 
@@ -179,9 +181,11 @@ cat("Best Lasso lambda:", best_lasso_lambda, "\n")
 
 We now compute the Lasso regression with the obtained value of $\lambda$.
 ```{r}
-res_lasso <- glmnet(as.matrix(train_data[,-11]), train_data$YBin, family="binomial", alpha=1, lambda=best_lasso_lambda)
+res_lasso <- glmnet(as.matrix(train_data[,-11]), train_data$YBin, family="binomial",
+                    alpha=1, lambda=best_lasso_lambda)
 coef(res_lasso)
 ```
+
 Now, we use the trained model for predictions and compute the performance of the model.
 ```{r}
 YBin_lasso <- round(predict(res_lasso, as.matrix(test_data[, -11]), type="response"))
@@ -190,13 +194,34 @@ perf_lasso <- performance(test_data$YBin, YBin_lasso)
 
 ## 5. Comparison of the model performances
 
+Below are the sums of squared of errors of the 4 models from above.
+```{r}
+error_logit <- sum((test_data$YBin - YBin_logit)^2)
+error_forward <- sum((test_data$YBin - YBin_forward)^2)
+error_ridge <- sum((test_data$YBin - YBin_ridge)^2)
+error_lasso <- sum((test_data$YBin - YBin_lasso)^2)
+
+cat("Sum of squared of errors:\n",
+    "- Logit:", error_logit, "\n",
+    "- Forward:", error_forward, "\n",
+    "- Ridge:", error_ridge, "\n",
+    "- Lasso:", error_lasso, "\n"
+)
+```
+We can see that the model of `r switch(which.min(c(error_logit, error_forward, error_ridge, error_lasso)), "full logistic regression", "forward method", "Ridge regression", "Lasso regression")` makes the least errors. We can also say that with a data set of 85 observations (the 20% training data set), the model of full logistic regression, forward method, Ridge regression and Lasso regression make `r error_logit`, `r error_forward`, `r error_ridge` and `r error_lasso` mistakes, respectively.
+
+We now compare the performances of the 4 models.
 ```{r}
 data.frame(
   Model=c("Logit", "Forward", "Ridge", "Lasso"),
-  Accuracy=c(perf_logit$accuracy, perf_forward$accuracy, perf_ridge$accuracy, perf_lasso$accuracy),
-  Precision=c(perf_logit$precision, perf_forward$precision, perf_ridge$precision, perf_lasso$precision),
-  Recall=c(perf_logit$recall, perf_forward$recall, perf_ridge$recall, perf_lasso$recall),
-  Specificity=c(perf_logit$specificity, perf_forward$specificity, perf_ridge$specificity, perf_lasso$specificity)
+  Accuracy=c(perf_logit$accuracy, perf_forward$accuracy,
+             perf_ridge$accuracy, perf_lasso$accuracy),
+  Precision=c(perf_logit$precision, perf_forward$precision,
+              perf_ridge$precision, perf_lasso$precision),
+  Recall=c(perf_logit$recall, perf_forward$recall,
+           perf_ridge$recall, perf_lasso$recall),
+  Specificity=c(perf_logit$specificity, perf_forward$specificity,
+                perf_ridge$specificity, perf_lasso$specificity)
 )
 ```
-
+Based on the comparison above, we can see that the model of `r switch(which.max(c(perf_logit$accuracy, perf_forward$accuracy, perf_ridge$accuracy, perf_lasso$accuracy)), "full logistic regression", "forward method", "Ridge regression", "Lasso regression")` is the best in terms of accuracy. It is also worth noting that the performances of the 4 models are not too different from each other.
