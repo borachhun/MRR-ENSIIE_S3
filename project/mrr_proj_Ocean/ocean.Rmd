@@ -1,0 +1,83 @@
+---
+title: "MRR Project 2022 - Project Ocean"
+author: "Piseth KHENG, Borachhun YOU"
+date: "07 November 2022"
+output: pdf_document
+---
+
+# Install required packages
+```{r}
+
+```
+
+# Load data
+```{r}
+library(R.matlab)
+mat_data <- readMat("VectLB19922008.mat")
+df <- as.data.frame(mat_data$Vect)
+
+# add column names
+colnames(df) <- unlist(mat_data$labels)
+
+# data of BATS location
+bats <- df[(df$latitude>=31) & (df$latitude<=33) & (df$longitude<=-63) & (df$longitude>=-65), ]
+
+# remove lat and long from bats data
+bats <- bats[, -which(names(bats) %in% c("latitude", "longitude"))]
+```
+
+# Data sorted by year
+```{r}
+sorted_bats <- bats[order(bats$year),]
+
+library(data.table)
+sorted_bats$`Prev CHL 1` <- shift(sorted_bats$`CHL 1`)
+sorted_bats <- sorted_bats[-1,]
+sorted_bats
+```
+
+# Sorted data with previous 5 days' CHL 1
+```{r}
+XandY <- sorted_bats[, which(names(sorted_bats) %in% c("CHL 1", "THERM 1", "CC", "SR", "SSH", "WS", "5days", "year", "Prev CHL 1", "CHL 4"))]
+```
+
+# 5days converted to sin and cos, and remove year 
+```{r}
+XandY_dateConverted <- XandY[, -which(names(XandY) %in% c("5days", "year"))]
+XandY_dateConverted$`sin5days` <- sin(2*pi* XandY$`5days` /73)
+XandY_dateConverted$`cos5days` <- cos(2*pi* XandY$`5days` /73)
+```
+
+# Around BATS
+```{r}
+XandY_dateConverted <- XandY
+XandY_dateConverted$CHL1 <- sin(2*pi* XandY$`5days` /73)
+XandY_dateConverted
+```
+
+# Split data by year
+```{r}
+subset <- split(
+  x = unique(bats$year),
+  f = sample(rep(1:5, times=c(4,4,3,3,3)))
+)
+subset[[1]]
+```
+
+# 21/11/2022
+
+```{r}
+nine_locations <- data.frame(matrix(nrow=nrow(df)/9))
+i <- 1
+for (lat in unique(round(df$latitude))) {
+  for (long in unique(round(df$longitude))) {
+    tmp <- df[(round(df$latitude)==lat & round(df$longitude)==long), ]
+    colnames(tmp) <- paste(colnames(tmp), i)
+    nine_locations <- cbind(nine_locations, tmp)
+    i <- i + 1
+  }
+}
+nine_locations <- nine_locations[,-1]
+#nine_locations <- nine_locations[, -which(names(nine_locations))]
+```
+
