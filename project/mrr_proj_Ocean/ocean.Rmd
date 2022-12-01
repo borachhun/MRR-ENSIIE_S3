@@ -27,6 +27,7 @@ df[, 23:40] <- log10(df[, 23:40])
 df <- df[, -(6:22)]
 
 colnames(df)
+df
 ```
 
 # Data subset index by year
@@ -35,6 +36,7 @@ subset_year <- split(
   x = unique(df$year),
   f = sample(rep(1:5, times=c(4,4,3,3,3)))
 )
+subset_year
 ```
 
 # BATS
