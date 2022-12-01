@@ -5,14 +5,15 @@ date: "07 November 2022"
 output: pdf_document
 ---
 
-# Install required packages
+# Required packages
 ```{r}
-
+library(R.matlab)
+library(data.table)
+library(glmnet)
 ```
 
 # Load data
 ```{r}
-library(R.matlab)
 mat_data <- readMat("VectLB19922008.mat")
 df <- as.data.frame(mat_data$Vect)
 
@@ -28,24 +29,199 @@ df <- df[, -(6:22)]
 colnames(df)
 ```
 
-# Data at BATS
+# Data subset index by year
 ```{r}
-# data of BATS location
-bats <- df[(df$latitude>=31) & (df$latitude<=33) & (df$longitude<=-63) & (df$longitude>=-65), ]
-
-# remove lat and long from bats data
-bats <- bats[, -which(names(bats) %in% c("latitude", "longitude"))]
+subset_year <- split(
+  x = unique(df$year),
+  f = sample(rep(1:5, times=c(4,4,3,3,3)))
+)
 ```
 
-# Data at BATS sorted by year with previous 5days
+# BATS
 ```{r}
-sorted_bats <- bats[order(bats$year),]
+bats <- df[(df$latitude>=31) & (df$latitude<=33) & (df$longitude<=-63) & (df$longitude>=-65), ]
 
-library(data.table)
-sorted_bats$`Prev CHL 1` <- shift(sorted_bats$`CHL 1`)
-sorted_bats <- sorted_bats[-1,]XandY_dateConverted$`sin5days` <- sin(2*pi* XandY$`5days` /73)
-XandY_dateConverted$`cos5days` <- cos(2*pi* XandY$`5days` /73)
-sorted_bats
+# remove lat and long (26,27)
+bats <- bats[, -c(26,27)]
+
+# convert date to sin and cos
+bats$`sin5days` <- sin(2*pi* bats$`5days` /73)
+bats$`cos5days` <- cos(2*pi* bats$`5days` /73)
+
+colnames(bats)
+```
+
+## Split data by year
+```{r}
+# remove 5days and year (24,25)
+bats_train_data <- bats[bats$year %in% c(subset_year[[1]], subset_year[[2]], subset_year[[3]]), -c(24,25)]
+bats_test_data <- bats[bats$year %in% subset_year[[4]], -c(24,25)]
+bats_validate_data <- bats[bats$year %in% subset_year[[5]], -c(24,25)]
+
+colnames(bats_train_data)
+```
+
+## Predict all CHL i
+```{r}
+rmse_bats_linear <- c()
+rmse_bats_forward <- c()
+rmse_bats_ridge <- c()
+rmse_bats_lasso <- c()
+
+# loop for CHL 2-18
+for (i in 1:17) {
+  # 7:23 = CHL 2-18
+  train_data_CHLi <- bats_train_data[, -(c(7:23)[-i])]
+  test_data_CHLi <- bats_test_data[, -(c(7:23)[-i])]
+  
+  # 7 = always target CHL i
+  CHLi_sample <- 10^test_data_CHLi[, 7]
+  
+  # === LINEAR ===
+  
+  formula <- as.formula(paste("`CHL ", i+1, "` ~ .", sep=""))
+  reg_linear <- lm(formula, data=train_data_CHLi)
+  
+  linear_predict <- 10^predict(reg_linear, newdata=test_data_CHLi)
+  
+  rmse_bats_linear <- c(rmse_bats_linear, sqrt(sum((CHLi_sample - linear_predict)^2) / length(CHLi_sample)))
+  
+  # === FORWARD ===
+  
+  forward_formula <- as.formula(paste("`CHL ", i+1, "` ~ 1", sep=""))
+  reg_forward <- step(lm(forward_formula, data=train_data_CHLi), list(upper=reg_linear), direction="forward", trace=0)
+  
+  forward_predict <- 10^predict(reg_forward, newdata=test_data_CHLi)
+  
+  rmse_bats_forward <- c(rmse_bats_forward, sqrt(sum((CHLi_sample - forward_predict)^2) / length(CHLi_sample)))
+  
+  # === RIDGE ===
+  
+  # remove CHL 2-18, 5days and year (7:25)
+  cv_ridge <- cv.glmnet(x=as.matrix(bats[, -(7:25)]), y=bats[,(6+i)], alpha=0)
+  
+  # 7 = always target
+  reg_ridge <- glmnet(x=as.matrix(train_data_CHLi[,-7]), y=train_data_CHLi[,7], alpha=0, lambda=cv_ridge$lambda.min)
+  
+  ridge_predict <- 10^predict(reg_ridge, newx=as.matrix(test_data_CHLi[,-7]))
+  
+  rmse_bats_ridge <- c(rmse_bats_ridge, sqrt(sum((CHLi_sample - ridge_predict)^2) / length(CHLi_sample)))
+  
+  # === LASSO ===
+  
+  # remove CHL 2-18, 5days and year (7:25)
+  cv_lasso <- cv.glmnet(x=as.matrix(bats[, -(7:25)]), y=bats[,(6+i)], alpha=1)
+  
+  # 7 = always target
+  reg_lasso <- glmnet(x=as.matrix(train_data_CHLi[,-7]), y=train_data_CHLi[,7], alpha=1, lambda=cv_lasso$lambda.min)
+  
+  lasso_predict <- 10^predict(reg_lasso, newx=as.matrix(test_data_CHLi[,-7]))
+  
+  rmse_bats_lasso <- c(rmse_bats_lasso, sqrt(sum((CHLi_sample - lasso_predict)^2) / length(CHLi_sample)))
+}
+```
+
+```{r}
+plot(rmse_bats_linear)
+plot(rmse_bats_forward)
+plot(rmse_bats_ridge)
+plot(rmse_bats_lasso)
+```
+
+# Temporal analysis
+
+## Data at BATS sorted by year with previous 5days
+```{r}
+bats_with_prev <- bats[order(bats$year),]
+
+bats_with_prev$`Prev SSH` <- shift(bats_with_prev$`SSH`)
+bats_with_prev$`Prev CC` <- shift(bats_with_prev$`CC`)
+bats_with_prev$`Prev WS` <- shift(bats_with_prev$`WS`)
+bats_with_prev$`Prev SR` <- shift(bats_with_prev$`SR`)
+bats_with_prev$`Prev THERM 1` <- shift(bats_with_prev$`THERM 1`)
+bats_with_prev$`Prev CHL 1` <- shift(bats_with_prev$`CHL 1`)
+
+# remove first line (NA)
+bats_with_prev <- bats_with_prev[-1,]
+
+colnames(bats_with_prev)
+```
+
+## Split data by year
+```{r}
+# remove 5days and year (24,25)
+bats_with_prev_train_data <- bats_with_prev[bats_with_prev$year %in% c(subset_year[[1]], subset_year[[2]], subset_year[[3]]), -c(24,25)]
+bats_with_prev_test_data <- bats_with_prev[bats_with_prev$year %in% subset_year[[4]], -c(24,25)]
+bats_with_prev_validate_data <- bats_with_prev[bats_with_prev$year %in% subset_year[[5]], -c(24,25)]
+
+colnames(bats_with_prev_train_data)
+```
+
+## Predict all CHL i
+```{r}
+rmse_bats_prev_linear <- c()
+rmse_bats_prev_forward <- c()
+rmse_bats_prev_ridge <- c()
+rmse_bats_prev_lasso <- c()
+
+# loop for CHL 2-18
+for (i in 1:17) {
+  # 7:23 = CHL 2-18
+  train_data_CHLi <- bats_with_prev_train_data[, -(c(7:23)[-i])]
+  test_data_CHLi <- bats_with_prev_test_data[, -(c(7:23)[-i])]
+  
+  # 7 = always target CHL i
+  CHLi_sample <- 10^test_data_CHLi[, 7]
+  
+  # === LINEAR ===
+  
+  formula <- as.formula(paste("`CHL ", i+1, "` ~ .", sep=""))
+  reg_linear <- lm(formula, data=train_data_CHLi)
+  
+  linear_predict <- 10^predict(reg_linear, newdata=test_data_CHLi)
+  
+  rmse_bats_prev_linear <- c(rmse_bats_prev_linear, sqrt(sum((CHLi_sample - linear_predict)^2) / length(CHLi_sample)))
+  
+  # === FORWARD ===
+  
+  forward_formula <- as.formula(paste("`CHL ", i+1, "` ~ 1", sep=""))
+  reg_forward <- step(lm(forward_formula, data=train_data_CHLi), list(upper=reg_linear), direction="forward", trace=0)
+  
+  forward_predict <- 10^predict(reg_forward, newdata=test_data_CHLi)
+  
+  rmse_bats_prev_forward <- c(rmse_bats_prev_forward, sqrt(sum((CHLi_sample - forward_predict)^2) / length(CHLi_sample)))
+  
+  # === RIDGE ===
+  
+  # remove CHL 2-18, 5days and year (7:25)
+  cv_ridge <- cv.glmnet(x=as.matrix(bats_with_prev[, -(7:25)]), y=bats_with_prev[,(6+i)], alpha=0)
+  
+  # 7 = always target
+  reg_ridge <- glmnet(x=as.matrix(train_data_CHLi[,-7]), y=train_data_CHLi[,7], alpha=0, lambda=cv_ridge$lambda.min)
+  
+  ridge_predict <- 10^predict(reg_ridge, newx=as.matrix(test_data_CHLi[,-7]))
+  
+  rmse_bats_prev_ridge <- c(rmse_bats_prev_ridge, sqrt(sum((CHLi_sample - ridge_predict)^2) / length(CHLi_sample)))
+  
+  # === LASSO ===
+  
+  # remove CHL 2-18, 5days and year (7:25)
+  cv_lasso <- cv.glmnet(x=as.matrix(bats_with_prev[, -(7:25)]), y=bats_with_prev[,(6+i)], alpha=1)
+  
+  # 7 = always target
+  reg_lasso <- glmnet(x=as.matrix(train_data_CHLi[,-7]), y=train_data_CHLi[,7], alpha=1, lambda=cv_lasso$lambda.min)
+  
+  lasso_predict <- 10^predict(reg_lasso, newx=as.matrix(test_data_CHLi[,-7]))
+  
+  rmse_bats_prev_lasso <- c(rmse_bats_prev_lasso, sqrt(sum((CHLi_sample - lasso_predict)^2) / length(CHLi_sample)))
+}
+```
+
+```{r}
+plot(rmse_bats_prev_linear)
+plot(rmse_bats_prev_forward)
+plot(rmse_bats_prev_ridge)
+plot(rmse_bats_prev_lasso)
 ```
 
 # Spatial analysis
@@ -74,12 +250,8 @@ nine_locations <- nine_locations[, -24]
 colnames(nine_locations)
 ```
 
-# Split data by year
+## Split data by year
 ```{r}
-subset_year <- split(
-  x = unique(nine_locations$year),
-  f = sample(rep(1:5, times=c(4,4,3,3,3)))
-)
 # remove year (24)
 train_data <- nine_locations[nine_locations$year %in% c(subset_year[[1]], subset_year[[2]], subset_year[[3]]), -24]
 test_data <- nine_locations[nine_locations$year %in% subset_year[[4]], -24]
@@ -88,13 +260,12 @@ validate_data <- nine_locations[nine_locations$year %in% subset_year[[5]], -24]
 colnames(train_data)
 ```
 
-# Predict all CHL i
-
+## Predict all CHL i
 ```{r}
-rss_linear <- c()
-rss_forward <- c()
-rss_ridge <- c()
-rss_lasso <- c()
+rmse_linear <- c()
+rmse_forward <- c()
+rmse_ridge <- c()
+rmse_lasso <- c()
 
 # loop for CHL 2-18
 for (i in 1:17) {
@@ -112,20 +283,18 @@ for (i in 1:17) {
   
   linear_predict <- 10^predict(reg_linear, newdata=test_data_CHLi)
   
-  rss_linear <- c(rss_linear, sum((CHLi_sample - linear_predict)^2))
+  rmse_linear <- c(rmse_linear, sqrt(sum((CHLi_sample - linear_predict)^2) / length(CHLi_sample)))
   
   # === FORWARD ===
   
   forward_formula <- as.formula(paste("`CHL ", i+1, "` ~ 1", sep=""))
-  reg_forward <- step(lm(forward_formula, data=train_data_CHLi), list(upper=reg_linear), direction="forward", trace=-1)
+  reg_forward <- step(lm(forward_formula, data=train_data_CHLi), list(upper=reg_linear), direction="forward", trace=0)
   
   forward_predict <- 10^predict(reg_forward, newdata=test_data_CHLi)
   
-  rss_forward <- c(rss_forward, sum((CHLi_sample - forward_predict)^2))
+  rmse_forward <- c(rmse_forward, sqrt(sum((CHLi_sample - forward_predict)^2) / length(CHLi_sample)))
   
   # === RIDGE ===
-  
-  library(glmnet)
   
   # remove CHL 2-18 and year (7:24)
   cv_ridge <- cv.glmnet(x=as.matrix(nine_locations[, -(7:24)]), y=nine_locations[,(6+i)], alpha=0)
@@ -135,7 +304,7 @@ for (i in 1:17) {
   
   ridge_predict <- 10^predict(reg_ridge, newx=as.matrix(test_data_CHLi[,-7]))
   
-  rss_ridge <- c(rss_ridge, sum((CHLi_sample - ridge_predict)^2))
+  rmse_ridge <- c(rmse_ridge, sqrt(sum((CHLi_sample - ridge_predict)^2) / length(CHLi_sample)))
   
   # === LASSO ===
   
@@ -147,11 +316,13 @@ for (i in 1:17) {
   
   lasso_predict <- 10^predict(reg_lasso, newx=as.matrix(test_data_CHLi[,-7]))
   
-  rss_lasso <- c(rss_lasso, sum((CHLi_sample - lasso_predict)^2))
+  rmse_lasso <- c(rmse_lasso, sqrt(sum((CHLi_sample - lasso_predict)^2) / length(CHLi_sample)))
 }
+```
 
-plot(rss_linear)
-plot(rss_forward)
-plot(rss_ridge)
-plot(rss_lasso)
+```{r}
+plot(rmse_linear)
+plot(rmse_forward)
+plot(rmse_ridge)
+plot(rmse_lasso)
 ```
