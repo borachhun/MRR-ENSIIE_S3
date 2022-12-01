@@ -27,7 +27,6 @@ df[, 23:40] <- log10(df[, 23:40])
 df <- df[, -(6:22)]
 
 colnames(df)
-df
 ```
 
 # Data subset index by year
@@ -314,7 +313,7 @@ for (i in 1:17) {
   cv_lasso <- cv.glmnet(x=as.matrix(nine_locations[, -(7:24)]), y=nine_locations[,(6+i)], alpha=1)
   
   # 7 = always target
-  reg_lasso <- glmnet(x=as.matrix(train_data_CHLi[,-7]), y=train_data_CHLi[,7], alpha=1, lambda=cv_ridge$lambda.min)
+  reg_lasso <- glmnet(x=as.matrix(train_data_CHLi[,-7]), y=train_data_CHLi[,7], alpha=1, lambda=cv_lasso$lambda.min)
   
   lasso_predict <- 10^predict(reg_lasso, newx=as.matrix(test_data_CHLi[,-7]))
   
