@@ -35,15 +35,6 @@ my_plot <- function(perf_data, perf_type, method) {
 }
 ```
 
-```{r}
-grid.arrange(
-  my_plot(rmse_bats_linear, "RMSE", "Linear"),
-  my_plot(rmse_bats_forward, "RMSE", "Forward"),
-  my_plot(rmse_bats_ridge, "RMSE", "Ridge"),
-  my_plot(rmse_bats_lasso, "RMSE", "Lasso"),
-nrow=2)
-```
-
 # Load data
 ```{r}
 mat_data <- readMat("VectLB19922008.mat")
@@ -174,15 +165,16 @@ grid.arrange(
   my_plot(rmse_bats_ridge, "RMSE", "Ridge"),
   my_plot(rmse_bats_lasso, "RMSE", "Lasso"),
 nrow=2)
-my_plot(rmse_bats_linear, "RMSE", "Linear")
 ```
 
 
 ```{r}
-plot(r_squared_bats_linear)
-plot(r_squared_bats_forward)
-plot(r_squared_bats_ridge)
-plot(r_squared_bats_lasso)
+grid.arrange(
+  my_plot(r_squared_bats_linear, "R-squared", "Linear"),
+  my_plot(r_squared_bats_forward, "R-squared", "Forward"),
+  my_plot(r_squared_bats_ridge, "R-squared", "Ridge"),
+  my_plot(r_squared_bats_lasso, "R-squared", "Lasso"),
+nrow=2)
 ```
 
 # Temporal analysis
@@ -288,17 +280,22 @@ for (i in 1:17) {
 ```
 
 ```{r}
-plot(rmse_bats_prev_linear)
-plot(rmse_bats_prev_forward)
-plot(rmse_bats_prev_ridge)
-plot(rmse_bats_prev_lasso)
+grid.arrange(
+  my_plot(rmse_bats_prev_linear, "RMSE", "Linear"),
+  my_plot(rmse_bats_prev_forward, "RMSE", "Forward"),
+  my_plot(rmse_bats_prev_ridge, "RMSE", "Ridge"),
+  my_plot(rmse_bats_prev_lasso, "RMSE", "Lasso"),
+nrow=2)
 ```
 
+
 ```{r}
-plot(r_squared_bats_prev_linear)
-plot(r_squared_bats_prev_forward)
-plot(r_squared_bats_prev_ridge)
-plot(r_squared_bats_prev_lasso)
+grid.arrange(
+  my_plot(r_squared_bats_prev_linear, "R-squared", "Linear"),
+  my_plot(r_squared_bats_prev_forward, "R-squared", "Forward"),
+  my_plot(r_squared_bats_prev_ridge, "R-squared", "Ridge"),
+  my_plot(r_squared_bats_prev_lasso, "R-squared", "Lasso"),
+nrow=2)
 ```
 
 # Spatial analysis
@@ -411,17 +408,21 @@ for (i in 1:17) {
 ```
 
 ```{r}
-plot(rmse_linear)
-plot(rmse_forward)
-plot(rmse_ridge)
-plot(rmse_lasso)
+grid.arrange(
+  my_plot(rmse_linear, "RMSE", "Linear"),
+  my_plot(rmse_forward, "RMSE", "Forward"),
+  my_plot(rmse_ridge, "RMSE", "Ridge"),
+  my_plot(rmse_lasso, "RMSE", "Lasso"),
+nrow=2)
 ```
 
 ```{r}
-plot(r_squared_linear)
-plot(r_squared_forward)
-plot(r_squared_ridge)
-plot(r_squared_lasso)
+grid.arrange(
+  my_plot(r_squared_linear, "R-squared", "Linear"),
+  my_plot(r_squared_forward, "R-squared", "Forward"),
+  my_plot(r_squared_ridge, "R-squared", "Ridge"),
+  my_plot(r_squared_lasso, "R-squared", "Lasso"),
+nrow=2)
 ```
 
 ```{r}
