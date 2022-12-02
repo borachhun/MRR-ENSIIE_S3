@@ -327,3 +327,17 @@ plot(rmse_forward)
 plot(rmse_ridge)
 plot(rmse_lasso)
 ```
+
+
+```{r}
+tmp_linear <- lm(`CHL 5`~ ., data=df)
+#str(summary(tmp_linear))
+
+tmp_forward <- step(lm(`CHL 5`~ 1, data=df), list(upper=tmp_linear), direction="forward", trace=0)
+#str(summary(tmp_forward))
+
+tmp_cv_ridge <- cv.glmnet(x=as.matrix(df[,-10]), y=df[,10], alpha=0)
+tmp_ridge <- glmnet(x=as.matrix(df[,-10]), y=df[,10], alpha=0, lambda=tmp_cv_ridge$lambda.min)
+summary(tmp_ridge)
+```
+
