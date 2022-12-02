@@ -10,12 +10,38 @@ output: pdf_document
 library(R.matlab)
 library(data.table)
 library(glmnet)
+library(ggplot2)
+library(gridExtra)
 
 r_squared <- function(Y, Y_predict) {
   tss <- sum( (Y-mean(Y))^2 )
   rss <- sum( (Y-Y_predict)^2 )
   return(1-(rss/tss))
 }
+
+my_plot <- function(perf_data, perf_type, method) {
+  res <- ggplot(
+    data.frame(x_df = 2:18, y_df = perf_data),
+    aes(x = x_df, y = y_df)
+  ) + ggtitle(method) + xlab("CHL") + ylab(perf_type) + theme(plot.title=element_text(size=15, face="bold"))
+  
+  if (perf_type == "RMSE") {
+    res <- res + geom_point(size=2, color="darkorange1")
+  }
+  else {
+    res <- res + geom_point(size=2, color="darkcyan")
+  }
+  return(res)
+}
+```
+
+```{r}
+grid.arrange(
+  my_plot(rmse_bats_linear, "RMSE", "Linear"),
+  my_plot(rmse_bats_forward, "RMSE", "Forward"),
+  my_plot(rmse_bats_ridge, "RMSE", "Ridge"),
+  my_plot(rmse_bats_lasso, "RMSE", "Lasso"),
+nrow=2)
 ```
 
 # Load data
@@ -142,11 +168,15 @@ for (i in 1:17) {
 ```
 
 ```{r}
-plot(rmse_bats_linear)
-plot(rmse_bats_forward)
-plot(rmse_bats_ridge)
-plot(rmse_bats_lasso)
+grid.arrange(
+  my_plot(rmse_bats_linear, "RMSE", "Linear"),
+  my_plot(rmse_bats_forward, "RMSE", "Forward"),
+  my_plot(rmse_bats_ridge, "RMSE", "Ridge"),
+  my_plot(rmse_bats_lasso, "RMSE", "Lasso"),
+nrow=2)
+my_plot(rmse_bats_linear, "RMSE", "Linear")
 ```
+
 
 ```{r}
 plot(r_squared_bats_linear)
