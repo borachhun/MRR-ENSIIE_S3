@@ -10,6 +10,12 @@ output: pdf_document
 library(R.matlab)
 library(data.table)
 library(glmnet)
+
+r_squared <- function(Y, Y_predict) {
+  tss <- sum( (Y-mean(Y))^2 )
+  rss <- sum( (Y-Y_predict)^2 )
+  return(1-(rss/tss))
+}
 ```
 
 # Load data
@@ -69,6 +75,11 @@ rmse_bats_forward <- c()
 rmse_bats_ridge <- c()
 rmse_bats_lasso <- c()
 
+r_squared_bats_linear <- c()
+r_squared_bats_forward <- c()
+r_squared_bats_ridge <- c()
+r_squared_bats_lasso <- c()
+
 # loop for CHL 2-18
 for (i in 1:17) {
   # 7:23 = CHL 2-18
@@ -87,6 +98,8 @@ for (i in 1:17) {
   
   rmse_bats_linear <- c(rmse_bats_linear, sqrt(sum((CHLi_sample - linear_predict)^2) / length(CHLi_sample)))
   
+  r_squared_bats_linear <- c(r_squared_bats_linear, r_squared(CHLi_sample, linear_predict))
+  
   # === FORWARD ===
   
   forward_formula <- as.formula(paste("`CHL ", i+1, "` ~ 1", sep=""))
@@ -95,6 +108,8 @@ for (i in 1:17) {
   forward_predict <- 10^predict(reg_forward, newdata=test_data_CHLi)
   
   rmse_bats_forward <- c(rmse_bats_forward, sqrt(sum((CHLi_sample - forward_predict)^2) / length(CHLi_sample)))
+  
+  r_squared_bats_forward <- c(r_squared_bats_forward, r_squared(CHLi_sample, forward_predict))
   
   # === RIDGE ===
   
@@ -108,6 +123,8 @@ for (i in 1:17) {
   
   rmse_bats_ridge <- c(rmse_bats_ridge, sqrt(sum((CHLi_sample - ridge_predict)^2) / length(CHLi_sample)))
   
+  r_squared_bats_ridge <- c(r_squared_bats_ridge, r_squared(CHLi_sample, ridge_predict))
+  
   # === LASSO ===
   
   # remove CHL 2-18, 5days and year (7:25)
@@ -119,6 +136,8 @@ for (i in 1:17) {
   lasso_predict <- 10^predict(reg_lasso, newx=as.matrix(test_data_CHLi[,-7]))
   
   rmse_bats_lasso <- c(rmse_bats_lasso, sqrt(sum((CHLi_sample - lasso_predict)^2) / length(CHLi_sample)))
+  
+  r_squared_bats_lasso <- c(r_squared_bats_lasso, r_squared(CHLi_sample, lasso_predict))
 }
 ```
 
@@ -127,6 +146,13 @@ plot(rmse_bats_linear)
 plot(rmse_bats_forward)
 plot(rmse_bats_ridge)
 plot(rmse_bats_lasso)
+```
+
+```{r}
+plot(r_squared_bats_linear)
+plot(r_squared_bats_forward)
+plot(r_squared_bats_ridge)
+plot(r_squared_bats_lasso)
 ```
 
 # Temporal analysis
@@ -165,6 +191,11 @@ rmse_bats_prev_forward <- c()
 rmse_bats_prev_ridge <- c()
 rmse_bats_prev_lasso <- c()
 
+r_squared_bats_prev_linear <- c()
+r_squared_bats_prev_forward <- c()
+r_squared_bats_prev_ridge <- c()
+r_squared_bats_prev_lasso <- c()
+
 # loop for CHL 2-18
 for (i in 1:17) {
   # 7:23 = CHL 2-18
@@ -183,6 +214,8 @@ for (i in 1:17) {
   
   rmse_bats_prev_linear <- c(rmse_bats_prev_linear, sqrt(sum((CHLi_sample - linear_predict)^2) / length(CHLi_sample)))
   
+  r_squared_bats_prev_linear <- c(r_squared_bats_prev_linear, r_squared(CHLi_sample, linear_predict))
+  
   # === FORWARD ===
   
   forward_formula <- as.formula(paste("`CHL ", i+1, "` ~ 1", sep=""))
@@ -191,6 +224,8 @@ for (i in 1:17) {
   forward_predict <- 10^predict(reg_forward, newdata=test_data_CHLi)
   
   rmse_bats_prev_forward <- c(rmse_bats_prev_forward, sqrt(sum((CHLi_sample - forward_predict)^2) / length(CHLi_sample)))
+  
+  r_squared_bats_prev_forward <- c(r_squared_bats_prev_forward, r_squared(CHLi_sample, forward_predict))
   
   # === RIDGE ===
   
@@ -204,6 +239,8 @@ for (i in 1:17) {
   
   rmse_bats_prev_ridge <- c(rmse_bats_prev_ridge, sqrt(sum((CHLi_sample - ridge_predict)^2) / length(CHLi_sample)))
   
+  r_squared_bats_prev_ridge <- c(r_squared_bats_prev_ridge, r_squared(CHLi_sample, ridge_predict))
+  
   # === LASSO ===
   
   # remove CHL 2-18, 5days and year (7:25)
@@ -215,6 +252,8 @@ for (i in 1:17) {
   lasso_predict <- 10^predict(reg_lasso, newx=as.matrix(test_data_CHLi[,-7]))
   
   rmse_bats_prev_lasso <- c(rmse_bats_prev_lasso, sqrt(sum((CHLi_sample - lasso_predict)^2) / length(CHLi_sample)))
+  
+  r_squared_bats_prev_lasso <- c(r_squared_bats_prev_lasso, r_squared(CHLi_sample, lasso_predict))
 }
 ```
 
@@ -223,6 +262,13 @@ plot(rmse_bats_prev_linear)
 plot(rmse_bats_prev_forward)
 plot(rmse_bats_prev_ridge)
 plot(rmse_bats_prev_lasso)
+```
+
+```{r}
+plot(r_squared_bats_prev_linear)
+plot(r_squared_bats_prev_forward)
+plot(r_squared_bats_prev_ridge)
+plot(r_squared_bats_prev_lasso)
 ```
 
 # Spatial analysis
@@ -268,6 +314,11 @@ rmse_forward <- c()
 rmse_ridge <- c()
 rmse_lasso <- c()
 
+r_squared_linear <- c()
+r_squared_forward <- c()
+r_squared_ridge <- c()
+r_squared_lasso <- c()
+
 # loop for CHL 2-18
 for (i in 1:17) {
   # 7:23 = CHL 2-18
@@ -286,6 +337,8 @@ for (i in 1:17) {
   
   rmse_linear <- c(rmse_linear, sqrt(sum((CHLi_sample - linear_predict)^2) / length(CHLi_sample)))
   
+  r_squared_linear <- c(r_squared_linear, r_squared(CHLi_sample, linear_predict))
+  
   # === FORWARD ===
   
   forward_formula <- as.formula(paste("`CHL ", i+1, "` ~ 1", sep=""))
@@ -294,6 +347,8 @@ for (i in 1:17) {
   forward_predict <- 10^predict(reg_forward, newdata=test_data_CHLi)
   
   rmse_forward <- c(rmse_forward, sqrt(sum((CHLi_sample - forward_predict)^2) / length(CHLi_sample)))
+  
+  r_squared_forward <- c(r_squared_forward, r_squared(CHLi_sample, forward_predict))
   
   # === RIDGE ===
   
@@ -307,6 +362,8 @@ for (i in 1:17) {
   
   rmse_ridge <- c(rmse_ridge, sqrt(sum((CHLi_sample - ridge_predict)^2) / length(CHLi_sample)))
   
+  r_squared_ridge <- c(r_squared_ridge, r_squared(CHLi_sample, ridge_predict))
+  
   # === LASSO ===
   
   # remove CHL 2-18 and year (7:24)
@@ -318,6 +375,8 @@ for (i in 1:17) {
   lasso_predict <- 10^predict(reg_lasso, newx=as.matrix(test_data_CHLi[,-7]))
   
   rmse_lasso <- c(rmse_lasso, sqrt(sum((CHLi_sample - lasso_predict)^2) / length(CHLi_sample)))
+  
+  r_squared_lasso <- c(r_squared_lasso, r_squared(CHLi_sample, lasso_predict))
 }
 ```
 
@@ -328,6 +387,12 @@ plot(rmse_ridge)
 plot(rmse_lasso)
 ```
 
+```{r}
+plot(r_squared_linear)
+plot(r_squared_forward)
+plot(r_squared_ridge)
+plot(r_squared_lasso)
+```
 
 ```{r}
 tmp_linear <- lm(`CHL 5`~ ., data=df)
