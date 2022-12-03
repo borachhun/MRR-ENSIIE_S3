@@ -26,10 +26,10 @@ my_plot <- function(perf_data, perf_type, method) {
   ) + ggtitle(method) + xlab("CHL") + ylab(perf_type) + theme(plot.title=element_text(size=15, face="bold"))
   
   if (perf_type == "RMSE") {
-    res <- res + geom_point(size=2, color="darkorange1")
+    res <- res + geom_point(size=2, color="darkorange1") + ylim(0,0.18)
   }
   else {
-    res <- res + geom_point(size=2, color="darkcyan")
+    res <- res + geom_point(size=2, color="darkcyan") + ylim(0,1)
   }
   return(res)
 }
@@ -91,11 +91,13 @@ rmse_bats_linear <- c()
 rmse_bats_forward <- c()
 rmse_bats_ridge <- c()
 rmse_bats_lasso <- c()
+rmse_bats_elastic_net <- c()
 
 r_squared_bats_linear <- c()
 r_squared_bats_forward <- c()
 r_squared_bats_ridge <- c()
 r_squared_bats_lasso <- c()
+r_squared_bats_elastic_net <- c()
 
 # loop for CHL 2-18
 for (i in 1:17) {
@@ -155,26 +157,52 @@ for (i in 1:17) {
   rmse_bats_lasso <- c(rmse_bats_lasso, sqrt(sum((CHLi_sample - lasso_predict)^2) / length(CHLi_sample)))
   
   r_squared_bats_lasso <- c(r_squared_bats_lasso, r_squared(CHLi_sample, lasso_predict))
+  
+  # === ELASTIC NET ===
+  
+  sub_rmse_elastic_net <- c()
+  sub_r_squared_elastic_net <- c()
+  for (a in 0:10) {
+    # remove CHL 2-18, 5days and year (7:25)
+    cv_elastic_net <- cv.glmnet(x=as.matrix(bats[, -(7:25)]), y=bats[,(6+i)], alpha=a/10)
+    
+    # 7 = always target
+    reg_elastic_net <- glmnet(x=as.matrix(train_data_CHLi[,-7]), y=train_data_CHLi[,7], alpha=a/10, lambda=cv_elastic_net$lambda.min)
+    
+    elastic_net_predict <- 10^predict(reg_elastic_net, newx=as.matrix(test_data_CHLi[,-7]))
+    
+    sub_rmse_elastic_net <- c(sub_rmse_elastic_net, sqrt(sum((CHLi_sample - elastic_net_predict)^2) / length(CHLi_sample)))
+    
+    sub_r_squared_elastic_net <- c(sub_r_squared_elastic_net, r_squared(CHLi_sample, elastic_net_predict))
+  }
+  min_error_index <- which.min(sub_rmse_elastic_net)
+  
+  rmse_bats_elastic_net <- c(rmse_bats_elastic_net, sub_rmse_elastic_net[min_error_index])
+  
+  r_squared_bats_elastic_net <- c(r_squared_bats_elastic_net, sub_r_squared_elastic_net[min_error_index])
 }
 ```
 
 ```{r}
-grid.arrange(
+plot_rmse_bats <- grid.arrange(
   my_plot(rmse_bats_linear, "RMSE", "Linear"),
   my_plot(rmse_bats_forward, "RMSE", "Forward"),
   my_plot(rmse_bats_ridge, "RMSE", "Ridge"),
   my_plot(rmse_bats_lasso, "RMSE", "Lasso"),
-nrow=2)
+  my_plot(rmse_bats_elastic_net, "RMSE", "Elastic net"),
+nrow=1)
+ggsave("plot_rmse_bats.png", plot=plot_rmse_bats, height=2, width=15)
 ```
 
-
 ```{r}
-grid.arrange(
+plot_r_squared_bats <- grid.arrange(
   my_plot(r_squared_bats_linear, "R-squared", "Linear"),
   my_plot(r_squared_bats_forward, "R-squared", "Forward"),
   my_plot(r_squared_bats_ridge, "R-squared", "Ridge"),
   my_plot(r_squared_bats_lasso, "R-squared", "Lasso"),
-nrow=2)
+  my_plot(r_squared_bats_elastic_net, "R-squared", "Elastic net"),
+nrow=1)
+ggsave("plot_r_squared_bats.png", plot=plot_r_squared_bats, height=2, width=15)
 ```
 
 # Temporal analysis
@@ -212,11 +240,13 @@ rmse_bats_prev_linear <- c()
 rmse_bats_prev_forward <- c()
 rmse_bats_prev_ridge <- c()
 rmse_bats_prev_lasso <- c()
+rmse_bats_prev_elastic_net <- c()
 
 r_squared_bats_prev_linear <- c()
 r_squared_bats_prev_forward <- c()
 r_squared_bats_prev_ridge <- c()
 r_squared_bats_prev_lasso <- c()
+r_squared_bats_prev_elastic_net <- c()
 
 # loop for CHL 2-18
 for (i in 1:17) {
@@ -276,26 +306,52 @@ for (i in 1:17) {
   rmse_bats_prev_lasso <- c(rmse_bats_prev_lasso, sqrt(sum((CHLi_sample - lasso_predict)^2) / length(CHLi_sample)))
   
   r_squared_bats_prev_lasso <- c(r_squared_bats_prev_lasso, r_squared(CHLi_sample, lasso_predict))
+  
+  # === ELASTIC NET ===
+  
+  sub_rmse_elastic_net <- c()
+  sub_r_squared_elastic_net <- c()
+  for (a in 0:10) {
+    # remove CHL 2-18, 5days and year (7:25)
+    cv_elastic_net <- cv.glmnet(x=as.matrix(bats_with_prev[, -(7:25)]), y=bats_with_prev[,(6+i)], alpha=a/10)
+    
+    # 7 = always target
+    reg_elastic_net <- glmnet(x=as.matrix(train_data_CHLi[,-7]), y=train_data_CHLi[,7], alpha=a/10, lambda=cv_elastic_net$lambda.min)
+    
+    elastic_net_predict <- 10^predict(reg_elastic_net, newx=as.matrix(test_data_CHLi[,-7]))
+    
+    sub_rmse_elastic_net <- c(sub_rmse_elastic_net, sqrt(sum((CHLi_sample - elastic_net_predict)^2) / length(CHLi_sample)))
+    
+    sub_r_squared_elastic_net <- c(sub_r_squared_elastic_net, r_squared(CHLi_sample, elastic_net_predict))
+  }
+  min_error_index <- which.min(sub_rmse_elastic_net)
+  
+  rmse_bats_prev_elastic_net <- c(rmse_bats_prev_elastic_net, sub_rmse_elastic_net[min_error_index])
+  
+  r_squared_bats_prev_elastic_net <- c(r_squared_bats_prev_elastic_net, sub_r_squared_elastic_net[min_error_index])
 }
 ```
 
 ```{r}
-grid.arrange(
+plot_rmse_bats_prev <- grid.arrange(
   my_plot(rmse_bats_prev_linear, "RMSE", "Linear"),
   my_plot(rmse_bats_prev_forward, "RMSE", "Forward"),
   my_plot(rmse_bats_prev_ridge, "RMSE", "Ridge"),
   my_plot(rmse_bats_prev_lasso, "RMSE", "Lasso"),
-nrow=2)
+  my_plot(rmse_bats_prev_elastic_net, "RMSE", "Elastic net"),
+nrow=1)
+ggsave("plot_rmse_bats_prev.png", plot=plot_rmse_bats_prev, height=2, width=15)
 ```
 
-
 ```{r}
-grid.arrange(
+plot_r_squared_bat_prev <- grid.arrange(
   my_plot(r_squared_bats_prev_linear, "R-squared", "Linear"),
   my_plot(r_squared_bats_prev_forward, "R-squared", "Forward"),
   my_plot(r_squared_bats_prev_ridge, "R-squared", "Ridge"),
   my_plot(r_squared_bats_prev_lasso, "R-squared", "Lasso"),
-nrow=2)
+  my_plot(r_squared_bats_prev_elastic_net, "R-squared", "Elastic net"),
+nrow=1)
+ggsave("plot_r_squared_bat_prev.png", plot=plot_r_squared_bat_prev, height=2, width=15)
 ```
 
 # Spatial analysis
@@ -340,11 +396,13 @@ rmse_linear <- c()
 rmse_forward <- c()
 rmse_ridge <- c()
 rmse_lasso <- c()
+rmse_elastic_net <- c()
 
 r_squared_linear <- c()
 r_squared_forward <- c()
 r_squared_ridge <- c()
 r_squared_lasso <- c()
+r_squared_elastic_net <- c()
 
 # loop for CHL 2-18
 for (i in 1:17) {
@@ -404,36 +462,50 @@ for (i in 1:17) {
   rmse_lasso <- c(rmse_lasso, sqrt(sum((CHLi_sample - lasso_predict)^2) / length(CHLi_sample)))
   
   r_squared_lasso <- c(r_squared_lasso, r_squared(CHLi_sample, lasso_predict))
+  
+  # === ELASTIC NET ===
+  
+  sub_rmse_elastic_net <- c()
+  sub_r_squared_elastic_net <- c()
+  for (a in 0:10) {
+    # remove CHL 2-18, 5days and year (7:25)
+    cv_elastic_net <- cv.glmnet(x=as.matrix(nine_locations[, -(7:24)]), y=nine_locations[,(6+i)], alpha=a/10)
+    
+    # 7 = always target
+    reg_elastic_net <- glmnet(x=as.matrix(train_data_CHLi[,-7]), y=train_data_CHLi[,7], alpha=a/10, lambda=cv_elastic_net$lambda.min)
+    
+    elastic_net_predict <- 10^predict(reg_elastic_net, newx=as.matrix(test_data_CHLi[,-7]))
+    
+    sub_rmse_elastic_net <- c(sub_rmse_elastic_net, sqrt(sum((CHLi_sample - elastic_net_predict)^2) / length(CHLi_sample)))
+    
+    sub_r_squared_elastic_net <- c(sub_r_squared_elastic_net, r_squared(CHLi_sample, elastic_net_predict))
+  }
+  min_error_index <- which.min(sub_rmse_elastic_net)
+  
+  rmse_elastic_net <- c(rmse_elastic_net, sub_rmse_elastic_net[min_error_index])
+  
+  r_squared_elastic_net <- c(r_squared_elastic_net, sub_r_squared_elastic_net[min_error_index])
 }
 ```
 
 ```{r}
-grid.arrange(
+plot_rmse <- grid.arrange(
   my_plot(rmse_linear, "RMSE", "Linear"),
   my_plot(rmse_forward, "RMSE", "Forward"),
   my_plot(rmse_ridge, "RMSE", "Ridge"),
   my_plot(rmse_lasso, "RMSE", "Lasso"),
-nrow=2)
+  my_plot(rmse_elastic_net, "RMSE", "Elastic net"),
+nrow=1)
+ggsave("plot_rmse.png", plot=plot_rmse, height=2, width=15)
 ```
 
 ```{r}
-grid.arrange(
+plot_r_squared <- grid.arrange(
   my_plot(r_squared_linear, "R-squared", "Linear"),
   my_plot(r_squared_forward, "R-squared", "Forward"),
   my_plot(r_squared_ridge, "R-squared", "Ridge"),
   my_plot(r_squared_lasso, "R-squared", "Lasso"),
-nrow=2)
+  my_plot(r_squared_elastic_net, "R-squared", "Elastic net"),
+nrow=1)
+ggsave("plot_r_squared.png", plot=plot_r_squared, height=2, width=15)
 ```
-
-```{r}
-tmp_linear <- lm(`CHL 5`~ ., data=df)
-#str(summary(tmp_linear))
-
-tmp_forward <- step(lm(`CHL 5`~ 1, data=df), list(upper=tmp_linear), direction="forward", trace=0)
-#str(summary(tmp_forward))
-
-tmp_cv_ridge <- cv.glmnet(x=as.matrix(df[,-10]), y=df[,10], alpha=0)
-tmp_ridge <- glmnet(x=as.matrix(df[,-10]), y=df[,10], alpha=0, lambda=tmp_cv_ridge$lambda.min)
-summary(tmp_ridge)
-```
-
