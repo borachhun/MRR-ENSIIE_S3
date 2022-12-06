@@ -509,3 +509,22 @@ plot_r_squared <- grid.arrange(
 nrow=1)
 ggsave("plot_r_squared.png", plot=plot_r_squared, height=2, width=15)
 ```
+
+# CHL heat map
+```{r}
+CHL_heat_map <- function(CHL_data, title) {
+  plot_data <- expand.grid(depth=1:18, `5days`=1:73)
+  plot_data$CHL <- c(sapply(1:nrow(CHL_data), function(row) as.numeric(CHL_data[row,])))
+  
+  `5 days` <- plot_data$`5days`
+  `Depth level` <- plot_data$depth
+  `log10(CHL)` <- plot_data$CHL
+  
+  return(ggplot(plot_data, aes(x=`5 days`, y=`Depth level`, fill=`log10(CHL)`)) + geom_tile() + scale_fill_gradientn(colors = rainbow(7), limits=c(-1.8,0.4), breaks=seq(-1.8,0.4,0.4)) + scale_y_reverse() + coord_fixed() + ggtitle(title))
+}
+```
+
+```{r}
+CHL_heat_map(bats[bats$year==1992,6:23], "1992 sample")
+```
+
