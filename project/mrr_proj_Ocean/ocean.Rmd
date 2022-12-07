@@ -49,7 +49,7 @@ df[, 23:40] <- log10(df[, 23:40])
 # remove THERM 2 - THERM 18
 df <- df[, -(6:22)]
 
-colnames(df)
+df
 ```
 
 # Data subset index by year
@@ -72,7 +72,7 @@ bats <- bats[, -c(26,27)]
 bats$`sin5days` <- sin(2*pi* bats$`5days` /73)
 bats$`cos5days` <- cos(2*pi* bats$`5days` /73)
 
-colnames(bats)
+bats
 ```
 
 ## Split data by year
@@ -82,7 +82,7 @@ bats_train_data <- bats[bats$year %in% c(subset_year[[1]], subset_year[[2]], sub
 bats_test_data <- bats[bats$year %in% subset_year[[4]], -c(24,25)]
 bats_validate_data <- bats[bats$year %in% subset_year[[5]], -c(24,25)]
 
-colnames(bats_train_data)
+bats_train_data
 ```
 
 ## Predict all CHL i
