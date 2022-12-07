@@ -99,6 +99,12 @@ r_squared_bats_ridge <- c()
 r_squared_bats_lasso <- c()
 r_squared_bats_elastic_net <- c()
 
+coef_bats_linear <- list()
+coef_bats_forward <- list()
+coef_bats_ridge <- list()
+coef_bats_lasso <- list()
+coef_bats_elastic_net <- list()
+
 # loop for CHL 2-18
 for (i in 1:17) {
   # 7:23 = CHL 2-18
@@ -113,6 +119,8 @@ for (i in 1:17) {
   formula <- as.formula(paste("`CHL ", i+1, "` ~ .", sep=""))
   reg_linear <- lm(formula, data=train_data_CHLi)
   
+  coef_bats_linear <- append(coef_bats_linear, coef(reg_linear))
+  
   linear_predict <- 10^predict(reg_linear, newdata=test_data_CHLi)
   
   rmse_bats_linear <- c(rmse_bats_linear, sqrt(sum((CHLi_sample - linear_predict)^2) / length(CHLi_sample)))
@@ -123,6 +131,18 @@ for (i in 1:17) {
   
   forward_formula <- as.formula(paste("`CHL ", i+1, "` ~ 1", sep=""))
   reg_forward <- step(lm(forward_formula, data=train_data_CHLi), list(upper=reg_linear), direction="forward", trace=0)
+  
+  # add 0 to removed variables for comparison with other methods
+  coef_forward_with_zero <- coef(reg_forward)
+  # 7 = target variable
+  for (var in colnames(train_data_CHLi[,-7])) {
+    if (!(var %in% names(coef(reg_forward)))) {
+      coef_forward_with_zero <- c(coef_forward_with_zero, 0)
+      # update vector name by adding the removed variable name
+    }
+  }
+  
+  coef_bats_forward <- append(coef_bats_forward, coef(reg_forward))
   
   forward_predict <- 10^predict(reg_forward, newdata=test_data_CHLi)
   
@@ -138,6 +158,8 @@ for (i in 1:17) {
   # 7 = always target
   reg_ridge <- glmnet(x=as.matrix(train_data_CHLi[,-7]), y=train_data_CHLi[,7], alpha=0, lambda=cv_ridge$lambda.min)
   
+  coef_bats_ridge <- append(coef_bats_ridge, coef(reg_ridge))
+  
   ridge_predict <- 10^predict(reg_ridge, newx=as.matrix(test_data_CHLi[,-7]))
   
   rmse_bats_ridge <- c(rmse_bats_ridge, sqrt(sum((CHLi_sample - ridge_predict)^2) / length(CHLi_sample)))
@@ -152,6 +174,8 @@ for (i in 1:17) {
   # 7 = always target
   reg_lasso <- glmnet(x=as.matrix(train_data_CHLi[,-7]), y=train_data_CHLi[,7], alpha=1, lambda=cv_lasso$lambda.min)
   
+  coef_bats_lasso <- append(coef_bats_lasso, coef(reg_lasso))
+  
   lasso_predict <- 10^predict(reg_lasso, newx=as.matrix(test_data_CHLi[,-7]))
   
   rmse_bats_lasso <- c(rmse_bats_lasso, sqrt(sum((CHLi_sample - lasso_predict)^2) / length(CHLi_sample)))
@@ -162,12 +186,15 @@ for (i in 1:17) {
   
   sub_rmse_elastic_net <- c()
   sub_r_squared_elastic_net <- c()
+  all_elastic_net_models <- list()
   for (a in 0:10) {
     # remove CHL 2-18, 5days and year (7:25)
     cv_elastic_net <- cv.glmnet(x=as.matrix(bats[, -(7:25)]), y=bats[,(6+i)], alpha=a/10)
     
     # 7 = always target
     reg_elastic_net <- glmnet(x=as.matrix(train_data_CHLi[,-7]), y=train_data_CHLi[,7], alpha=a/10, lambda=cv_elastic_net$lambda.min)
+    
+    all_elastic_net_models <- append(all_elastic_net_models, reg_elastic_net)
     
     elastic_net_predict <- 10^predict(reg_elastic_net, newx=as.matrix(test_data_CHLi[,-7]))
     
@@ -176,6 +203,8 @@ for (i in 1:17) {
     sub_r_squared_elastic_net <- c(sub_r_squared_elastic_net, r_squared(CHLi_sample, elastic_net_predict))
   }
   min_error_index <- which.min(sub_rmse_elastic_net)
+  
+  coef_bats_elastic_net <- append(coef_bats_elastic_net, coef(all_elastic_net_models[[min_error_index]]))
   
   rmse_bats_elastic_net <- c(rmse_bats_elastic_net, sub_rmse_elastic_net[min_error_index])
   
