@@ -604,20 +604,11 @@ log_CHL_predict <- function(test_data, model_list, regression) {
 }
 ```
 
-```{r}
-#bats[bats$year %in% subset_year[[4]], -c(24,25)]
-tmp <- bats[bats$year %in% subset_year[[4]],]
-tmp <- tmp[order(tmp$year), -c(24,25)]
-
-CHL_heat_map(log_CHL_predict(tmp[1:73,], model_bats_elastic_net), "linear bats")
-CHL_heat_map(tmp[1:73,7:23], "linear bats")
-```
-
 2001: one of the year in testing data set
 
 ```{r}
 # 2001 heatmap observation
-CHL_heat_map(bats[bats$year==2001, 7:23], "2001")
+ggsave("2001_bats_real.png", plot=CHL_heat_map(bats[bats$year==2001, 7:23], "2001"), height=2, width=6)
 ```
 
 ```{r}
