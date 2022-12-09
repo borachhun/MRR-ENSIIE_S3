@@ -637,3 +637,48 @@ ggsave("2001_spat_ridge.png", plot=CHL_heat_map(log_CHL_predict(nine_locations[n
 ggsave("2001_spat_lasso.png", plot=CHL_heat_map(log_CHL_predict(nine_locations[nine_locations$year==2001, -c(7:24)], model_lasso, "lasso"), "Lasso"), height=2, width=6)
 ggsave("2001_spat_elastic_net.png", plot=CHL_heat_map(log_CHL_predict(nine_locations[nine_locations$year==2001, -c(7:24)], model_elastic_net, "elastic net"), "Elastic net"), height=2, width=6)
 ```
+
+```{r}
+# Temporal analysis elastic net validation test
+
+rmse_bats_prev_elastic_net_validation <- c()
+r_squared_bats_prev_elastic_net_validation <- c()
+
+# loop for CHL 2-18
+for (i in 1:17) {
+  # 7:23 = CHL 2-18
+  validate_data_CHLi <- bats_with_prev_validate_data[, -(c(7:23)[-i])]
+  
+  # 7 = always target CHL i
+  CHLi_sample <- 10^validate_data_CHLi[, 7]
+  
+  elastic_net_predict <- 10^predict(model_bats_prev_elastic_net[[i]], newx=as.matrix(validate_data_CHLi[,-7]))
+  
+  rmse_bats_prev_elastic_net_validation <- c(rmse_bats_prev_elastic_net_validation, sqrt(sum((CHLi_sample - elastic_net_predict)^2) / length(CHLi_sample)))
+  
+  r_squared_bats_prev_elastic_net_validation <- c(r_squared_bats_prev_elastic_net_validation, r_squared(CHLi_sample, elastic_net_predict))
+}
+```
+
+```{r}
+# Spatial analysis elastic net validation test
+
+rmse_elastic_net_validation <- c()
+r_squared_elastic_net_validation <- c()
+
+# loop for CHL 2-18
+for (i in 1:17) {
+  # 7:23 = CHL 2-18
+  validate_data_CHLi <- validate_data[, -(c(7:23)[-i])]
+  
+  # 7 = always target CHL i
+  CHLi_sample <- 10^validate_data_CHLi[, 7]
+  
+  elastic_net_predict <- 10^predict(model_elastic_net[[i]], newx=as.matrix(validate_data_CHLi[,-7]))
+  
+  rmse_elastic_net_validation <- c(rmse_elastic_net_validation, sqrt(sum((CHLi_sample - elastic_net_predict)^2) / length(CHLi_sample)))
+  
+  r_squared_elastic_net_validation <- c(r_squared_elastic_net_validation, r_squared(CHLi_sample, elastic_net_predict))
+}
+```
+
