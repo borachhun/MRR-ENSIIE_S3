@@ -1,6 +1,6 @@
 ---
 title: "MRR Project 2022 - Project Ocean"
-author: "Piseth KHENG, Borachhun YOU"
+author: "Piseth KHENG, Borachhun YOU (Group 14)"
 date: "07 November 2022"
 output: pdf_document
 ---
@@ -12,13 +12,17 @@ library(data.table)
 library(glmnet)
 library(ggplot2)
 library(gridExtra)
+```
 
+```{r}
+# calculate R-squared
 r_squared <- function(Y, Y_predict) {
   tss <- sum( (Y-mean(Y))^2 )
   rss <- sum( (Y-Y_predict)^2 )
   return(1-(rss/tss))
 }
 
+# plot RMSE and R-squared for CHL 2-18
 my_plot <- function(perf_data, perf_type, method) {
   res <- ggplot(
     data.frame(x_df = 2:18, y_df = perf_data),
@@ -48,8 +52,6 @@ df[, 23:40] <- log10(df[, 23:40])
 
 # remove THERM 2 - THERM 18
 df <- df[, -(6:22)]
-
-df
 ```
 
 # Data subset index by year
@@ -59,7 +61,7 @@ df
 #  f = sample(rep(1:5, times=c(4,4,3,3,3)))
 #)
 
-# randomly chosen years for project
+# fix randomly chosen years from commented function above
 subset_year = list(`1`=c(1995,1998,1999,2005),
                    `2`=c(1993,1994,2002,2004),
                    `3`=c(1996,2003,2006),
@@ -67,7 +69,7 @@ subset_year = list(`1`=c(1995,1998,1999,2005),
                    `5`=c(1997,2000,2007))
 ```
 
-# BATS
+# Case 1: BATS location
 ```{r}
 bats <- df[(df$latitude>=31) & (df$latitude<=33) & (df$longitude<=-63) & (df$longitude>=-65), ]
 
@@ -206,6 +208,7 @@ for (i in 1:17) {
 }
 ```
 
+## RMSE plots
 ```{r}
 plot_rmse_bats <- grid.arrange(
   my_plot(rmse_bats_linear, "RMSE", "Linear"),
@@ -217,6 +220,7 @@ nrow=1)
 #ggsave("plot_rmse_bats.png", plot=plot_rmse_bats, height=2, width=15)
 ```
 
+## R-squared plots
 ```{r}
 plot_r_squared_bats <- grid.arrange(
   my_plot(r_squared_bats_linear, "R-squared", "Linear"),
@@ -228,7 +232,7 @@ nrow=1)
 #ggsave("plot_r_squared_bats.png", plot=plot_r_squared_bats, height=2, width=15)
 ```
 
-# Temporal analysis
+# Case 2: Temporal analysis
 
 ## Data at BATS sorted by year with previous 5days
 ```{r}
@@ -374,6 +378,7 @@ for (i in 1:17) {
 }
 ```
 
+## RMSE plots
 ```{r}
 plot_rmse_bats_prev <- grid.arrange(
   my_plot(rmse_bats_prev_linear, "RMSE", "Linear"),
@@ -385,6 +390,7 @@ nrow=1)
 #ggsave("plot_rmse_bats_prev.png", plot=plot_rmse_bats_prev, height=2, width=15)
 ```
 
+## R-squared plots
 ```{r}
 plot_r_squared_bat_prev <- grid.arrange(
   my_plot(r_squared_bats_prev_linear, "R-squared", "Linear"),
@@ -396,7 +402,7 @@ nrow=1)
 #ggsave("plot_r_squared_bat_prev.png", plot=plot_r_squared_bat_prev, height=2, width=15)
 ```
 
-# Spatial analysis
+# Case 3: Spatial analysis
 ```{r}
 # remove lat,long (26,27)
 nine_locations <- df[(round(df$latitude)==32 & round(df$longitude)==-64), -c(26,27)]
@@ -549,6 +555,7 @@ for (i in 1:17) {
 }
 ```
 
+## RMSE plots
 ```{r}
 plot_rmse <- grid.arrange(
   my_plot(rmse_linear, "RMSE", "Linear"),
@@ -560,6 +567,7 @@ nrow=1)
 #ggsave("plot_rmse.png", plot=plot_rmse, height=2, width=15)
 ```
 
+## R-squared plots
 ```{r}
 plot_r_squared <- grid.arrange(
   my_plot(r_squared_linear, "R-squared", "Linear"),
@@ -608,35 +616,41 @@ log_CHL_predict <- function(test_data, model_list, regression) {
 
 ```{r}
 # 2001 heatmap observation
-ggsave("2001_bats_real.png", plot=CHL_heat_map(bats[bats$year==2001, 7:23], "2001"), height=2, width=6)
+
+#ggsave("2001_bats_real.png", plot=CHL_heat_map(bats[bats$year==2001, 7:23], "2001"), height=2, width=6)
 ```
 
 ```{r}
 # 2001 heatmap prediction BATS
-ggsave("2001_bats_linear.png", plot=CHL_heat_map(log_CHL_predict(bats[bats$year==2001, -c(7:25)], model_bats_linear, "linear"), "Linear"), height=2, width=6)
-ggsave("2001_bats_forward.png", plot=CHL_heat_map(log_CHL_predict(bats[bats$year==2001, -c(7:25)], model_bats_forward, "forward"), "Forward"), height=2, width=6)
-ggsave("2001_bats_ridge.png", plot=CHL_heat_map(log_CHL_predict(bats[bats$year==2001, -c(7:25)], model_bats_ridge, "ridge"), "Ridge"), height=2, width=6)
-ggsave("2001_bats_lasso.png", plot=CHL_heat_map(log_CHL_predict(bats[bats$year==2001, -c(7:25)], model_bats_lasso, "lasso"), "Lasso"), height=2, width=6)
-ggsave("2001_bats_elastic_net.png", plot=CHL_heat_map(log_CHL_predict(bats[bats$year==2001, -c(7:25)], model_bats_elastic_net, "elastic net"), "Elastic net"), height=2, width=6)
+
+#ggsave("2001_bats_linear.png", plot=CHL_heat_map(log_CHL_predict(bats[bats$year==2001, -c(7:25)], model_bats_linear, "linear"), "Linear"), height=2, width=6)
+#ggsave("2001_bats_forward.png", plot=CHL_heat_map(log_CHL_predict(bats[bats$year==2001, -c(7:25)], model_bats_forward, "forward"), "Forward"), height=2, width=6)
+#ggsave("2001_bats_ridge.png", plot=CHL_heat_map(log_CHL_predict(bats[bats$year==2001, -c(7:25)], model_bats_ridge, "ridge"), "Ridge"), height=2, width=6)
+#ggsave("2001_bats_lasso.png", plot=CHL_heat_map(log_CHL_predict(bats[bats$year==2001, -c(7:25)], model_bats_lasso, "lasso"), "Lasso"), height=2, width=6)
+#ggsave("2001_bats_elastic_net.png", plot=CHL_heat_map(log_CHL_predict(bats[bats$year==2001, -c(7:25)], model_bats_elastic_net, "elastic net"), "Elastic net"), height=2, width=6)
 ```
 
 ```{r}
 # 2001 heatmap prediction temporal
-ggsave("2001_temp_linear.png", plot=CHL_heat_map(log_CHL_predict(bats_with_prev[bats_with_prev$year==2001, -c(7:25)], model_bats_prev_linear, "linear"), "Linear"), height=2, width=6)
-ggsave("2001_temp_forward.png", plot=CHL_heat_map(log_CHL_predict(bats_with_prev[bats_with_prev$year==2001, -c(7:25)], model_bats_prev_forward, "forward"), "Forward"), height=2, width=6)
-ggsave("2001_temp_ridge.png", plot=CHL_heat_map(log_CHL_predict(bats_with_prev[bats_with_prev$year==2001, -c(7:25)], model_bats_prev_ridge, "ridge"), "Ridge"), height=2, width=6)
-ggsave("2001_temp_lasso.png", plot=CHL_heat_map(log_CHL_predict(bats_with_prev[bats_with_prev$year==2001, -c(7:25)], model_bats_prev_lasso, "lasso"), "Lasso"), height=2, width=6)
-ggsave("2001_temp_elastic_net.png", plot=CHL_heat_map(log_CHL_predict(bats_with_prev[bats_with_prev$year==2001, -c(7:25)], model_bats_prev_elastic_net, "elastic net"), "Elastic net"), height=2, width=6)
+
+#ggsave("2001_temp_linear.png", plot=CHL_heat_map(log_CHL_predict(bats_with_prev[bats_with_prev$year==2001, -c(7:25)], model_bats_prev_linear, "linear"), "Linear"), height=2, width=6)
+#ggsave("2001_temp_forward.png", plot=CHL_heat_map(log_CHL_predict(bats_with_prev[bats_with_prev$year==2001, -c(7:25)], model_bats_prev_forward, "forward"), "Forward"), height=2, width=6)
+#ggsave("2001_temp_ridge.png", plot=CHL_heat_map(log_CHL_predict(bats_with_prev[bats_with_prev$year==2001, -c(7:25)], model_bats_prev_ridge, "ridge"), "Ridge"), height=2, width=6)
+#ggsave("2001_temp_lasso.png", plot=CHL_heat_map(log_CHL_predict(bats_with_prev[bats_with_prev$year==2001, -c(7:25)], model_bats_prev_lasso, "lasso"), "Lasso"), height=2, width=6)
+#ggsave("2001_temp_elastic_net.png", plot=CHL_heat_map(log_CHL_predict(bats_with_prev[bats_with_prev$year==2001, -c(7:25)], model_bats_prev_elastic_net, "elastic net"), "Elastic net"), height=2, width=6)
 ```
 
 ```{r}
 # 2001 heatmap prediction spatial
-ggsave("2001_spat_linear.png", plot=CHL_heat_map(log_CHL_predict(nine_locations[nine_locations$year==2001, -c(7:24)], model_linear, "linear"), "Linear"), height=2, width=6)
-ggsave("2001_spat_forward.png", plot=CHL_heat_map(log_CHL_predict(nine_locations[nine_locations$year==2001, -c(7:24)], model_forward, "forward"), "Forward"), height=2, width=6)
-ggsave("2001_spat_ridge.png", plot=CHL_heat_map(log_CHL_predict(nine_locations[nine_locations$year==2001, -c(7:24)], model_ridge, "ridge"), "Ridge"), height=2, width=6)
-ggsave("2001_spat_lasso.png", plot=CHL_heat_map(log_CHL_predict(nine_locations[nine_locations$year==2001, -c(7:24)], model_lasso, "lasso"), "Lasso"), height=2, width=6)
-ggsave("2001_spat_elastic_net.png", plot=CHL_heat_map(log_CHL_predict(nine_locations[nine_locations$year==2001, -c(7:24)], model_elastic_net, "elastic net"), "Elastic net"), height=2, width=6)
+
+#ggsave("2001_spat_linear.png", plot=CHL_heat_map(log_CHL_predict(nine_locations[nine_locations$year==2001, -c(7:24)], model_linear, "linear"), "Linear"), height=2, width=6)
+#ggsave("2001_spat_forward.png", plot=CHL_heat_map(log_CHL_predict(nine_locations[nine_locations$year==2001, -c(7:24)], model_forward, "forward"), "Forward"), height=2, width=6)
+#ggsave("2001_spat_ridge.png", plot=CHL_heat_map(log_CHL_predict(nine_locations[nine_locations$year==2001, -c(7:24)], model_ridge, "ridge"), "Ridge"), height=2, width=6)
+#ggsave("2001_spat_lasso.png", plot=CHL_heat_map(log_CHL_predict(nine_locations[nine_locations$year==2001, -c(7:24)], model_lasso, "lasso"), "Lasso"), height=2, width=6)
+#ggsave("2001_spat_elastic_net.png", plot=CHL_heat_map(log_CHL_predict(nine_locations[nine_locations$year==2001, -c(7:24)], model_elastic_net, "elastic net"), "Elastic net"), height=2, width=6)
 ```
+
+# Performance on validation set
 
 ```{r}
 # Temporal analysis elastic net validation test
@@ -681,4 +695,3 @@ for (i in 1:17) {
   r_squared_elastic_net_validation <- c(r_squared_elastic_net_validation, r_squared(CHLi_sample, elastic_net_predict))
 }
 ```
-
